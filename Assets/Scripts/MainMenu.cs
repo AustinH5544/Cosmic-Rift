@@ -231,7 +231,7 @@ public class MainMenu : MonoBehaviour
         {
             PlayerPrefs.SetString("SelectedStage", "Shootout");
             PlayerPrefs.Save();
-            SceneManager.LoadScene("Game");
+            SceneManager.LoadScene("ShootingRange");
         }
 
         if (GUILayout.Button("Story", buttonStyle, GUILayout.Height(90)))
