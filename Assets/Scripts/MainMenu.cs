@@ -1,24 +1,138 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.Audio;
 
 public class MainMenu : MonoBehaviour
 {
     public GUISkin guiSkin;
+    public AudioMixer audioMixer;
     private string[] crosshairColors = { "Red", "Green", "Blue" };
     private int selectedColorIndex = 0;
     private Rect windowRect = new Rect(Screen.width / 2 - 400, Screen.height / 2 - 350, 800, 700);
-    private enum MenuState { MainMenu, StageSelection, Options }
+    private enum MenuState { MainMenu, StageSelection, Options, SoundSettings, ControlsSettings }
     private MenuState currentState = MenuState.MainMenu;
+
+    private float masterVolume = 1f;
+    private float musicVolume = 1f;
+    private float sfxVolume = 1f;
+
+    private KeyCode shootKey = KeyCode.Mouse0;
+    private KeyCode coverKey = KeyCode.Space;
+    private KeyCode pauseKey = KeyCode.Escape;
+
+    private bool isRebindingShoot = false;
+    private bool isRebindingCover = false;
+    private bool isRebindingPause = false;
 
     void Start()
     {
         selectedColorIndex = PlayerPrefs.GetInt("CrosshairColorIndex", 0);
+        masterVolume = PlayerPrefs.GetFloat("MasterVolume", 1f);
+        musicVolume = PlayerPrefs.GetFloat("MusicVolume", 1f);
+        sfxVolume = PlayerPrefs.GetFloat("SFXVolume", 1f);
+        if (audioMixer != null)
+        {
+            audioMixer.SetFloat("MasterVolume", Mathf.Log10(masterVolume) * 20);
+            audioMixer.SetFloat("MusicVolume", Mathf.Log10(musicVolume) * 20);
+            audioMixer.SetFloat("SFXVolume", Mathf.Log10(sfxVolume) * 20);
+        }
+
+        shootKey = (KeyCode)System.Enum.Parse(typeof(KeyCode), PlayerPrefs.GetString("ShootKey", KeyCode.Mouse0.ToString()));
+        coverKey = (KeyCode)System.Enum.Parse(typeof(KeyCode), PlayerPrefs.GetString("CoverKey", KeyCode.Space.ToString()));
+        pauseKey = (KeyCode)System.Enum.Parse(typeof(KeyCode), PlayerPrefs.GetString("PauseKey", KeyCode.Escape.ToString()));
     }
 
     void OnGUI()
     {
         GUI.skin = guiSkin;
         windowRect = GUI.Window(0, windowRect, DrawMenuWindow, "");
+
+        if (isRebindingShoot || isRebindingCover || isRebindingPause)
+        {
+            Event e = Event.current;
+            if (e.isKey)
+            {
+                KeyCode newKey = e.keyCode;
+                if (newKey != KeyCode.None && newKey != KeyCode.Escape)
+                {
+                    if (isRebindingShoot)
+                    {
+                        shootKey = newKey;
+                        isRebindingShoot = false;
+                    }
+                    else if (isRebindingCover)
+                    {
+                        coverKey = newKey;
+                        isRebindingCover = false;
+                    }
+                    else if (isRebindingPause)
+                    {
+                        pauseKey = newKey;
+                        isRebindingPause = false;
+                    }
+
+                    PlayerPrefs.SetString("ShootKey", shootKey.ToString());
+                    PlayerPrefs.SetString("CoverKey", coverKey.ToString());
+                    PlayerPrefs.SetString("PauseKey", pauseKey.ToString());
+                    PlayerPrefs.Save();
+                }
+                else if (newKey == KeyCode.Escape)
+                {
+                    isRebindingShoot = false;
+                    isRebindingCover = false;
+                    isRebindingPause = false;
+                }
+            }
+            else if (e.isMouse)
+            {
+                if (e.button == 0)
+                {
+                    if (isRebindingShoot)
+                    {
+                        shootKey = KeyCode.Mouse0;
+                        isRebindingShoot = false;
+                    }
+                    else if (isRebindingCover)
+                    {
+                        coverKey = KeyCode.Mouse0;
+                        isRebindingCover = false;
+                    }
+                    else if (isRebindingPause)
+                    {
+                        pauseKey = KeyCode.Mouse0;
+                        isRebindingPause = false;
+                    }
+
+                    PlayerPrefs.SetString("ShootKey", shootKey.ToString());
+                    PlayerPrefs.SetString("CoverKey", coverKey.ToString());
+                    PlayerPrefs.SetString("PauseKey", pauseKey.ToString());
+                    PlayerPrefs.Save();
+                }
+                else if (e.button == 1)
+                {
+                    if (isRebindingShoot)
+                    {
+                        shootKey = KeyCode.Mouse1;
+                        isRebindingShoot = false;
+                    }
+                    else if (isRebindingCover)
+                    {
+                        coverKey = KeyCode.Mouse1;
+                        isRebindingCover = false;
+                    }
+                    else if (isRebindingPause)
+                    {
+                        pauseKey = KeyCode.Mouse1;
+                        isRebindingPause = false;
+                    }
+
+                    PlayerPrefs.SetString("ShootKey", shootKey.ToString());
+                    PlayerPrefs.SetString("CoverKey", coverKey.ToString());
+                    PlayerPrefs.SetString("PauseKey", pauseKey.ToString());
+                    PlayerPrefs.Save();
+                }
+            }
+        }
     }
 
     void DrawMenuWindow(int windowID)
@@ -35,6 +149,12 @@ public class MainMenu : MonoBehaviour
                 break;
             case MenuState.Options:
                 DrawOptions();
+                break;
+            case MenuState.SoundSettings:
+                DrawSoundSettings();
+                break;
+            case MenuState.ControlsSettings:
+                DrawControlsSettings();
                 break;
         }
 
@@ -155,17 +275,171 @@ public class MainMenu : MonoBehaviour
 
         if (GUILayout.Button("Sound", buttonStyle, GUILayout.Height(90)))
         {
-            Debug.Log("Sound Settings (TBD)");
+            currentState = MenuState.SoundSettings;
         }
 
         if (GUILayout.Button("Controls", buttonStyle, GUILayout.Height(90)))
         {
-            Debug.Log("Controls Settings (TBD)");
+            currentState = MenuState.ControlsSettings;
         }
 
         if (GUILayout.Button("Resolution", buttonStyle, GUILayout.Height(90)))
         {
             Debug.Log("Resolution Settings (TBD)");
+        }
+    }
+
+    void DrawSoundSettings()
+    {
+        GUIStyle backButtonStyle = new GUIStyle(GUI.skin.button);
+        backButtonStyle.fontSize = 24;
+        if (GUI.Button(new Rect(10, 10, 100, 40), "Back", backButtonStyle))
+        {
+            currentState = MenuState.Options;
+        }
+
+        GUILayout.Space(20);
+
+        GUIStyle titleStyle = new GUIStyle(GUI.skin.label);
+        titleStyle.fontSize = 56;
+        titleStyle.alignment = TextAnchor.MiddleCenter;
+        GUILayout.Label("Sound Settings", titleStyle, GUILayout.Height(80));
+
+        GUIStyle labelStyle = new GUIStyle(GUI.skin.label);
+        labelStyle.fontSize = 36;
+        labelStyle.alignment = TextAnchor.MiddleCenter;
+
+        GUIStyle percentageStyle = new GUIStyle(GUI.skin.label);
+        percentageStyle.fontSize = 28;
+        percentageStyle.alignment = TextAnchor.MiddleCenter;
+
+        GUIStyle buttonStyle = new GUIStyle(GUI.skin.button);
+        buttonStyle.fontSize = 28;
+
+        GUILayout.Space(20);
+
+        GUILayout.Label("Master Volume", labelStyle, GUILayout.Height(50));
+        GUILayout.BeginHorizontal();
+        GUILayout.FlexibleSpace();
+        GUILayout.BeginHorizontal();
+        masterVolume = GUILayout.HorizontalSlider(masterVolume, 0f, 1f, GUILayout.Width(500), GUILayout.Height(30));
+        GUILayout.Label(((int)(masterVolume * 100)).ToString() + "%", percentageStyle, GUILayout.Width(100), GUILayout.Height(30));
+        GUILayout.EndHorizontal();
+        GUILayout.FlexibleSpace();
+        GUILayout.EndHorizontal();
+        if (audioMixer != null)
+        {
+            audioMixer.SetFloat("MasterVolume", Mathf.Log10(masterVolume) * 20);
+        }
+
+        GUILayout.Space(20);
+
+        GUILayout.Label("Music Volume", labelStyle, GUILayout.Height(50));
+        GUILayout.BeginHorizontal();
+        GUILayout.FlexibleSpace();
+        GUILayout.BeginHorizontal();
+        musicVolume = GUILayout.HorizontalSlider(musicVolume, 0f, 1f, GUILayout.Width(500), GUILayout.Height(30));
+        GUILayout.Label(((int)(musicVolume * 100)).ToString() + "%", percentageStyle, GUILayout.Width(100), GUILayout.Height(30));
+        GUILayout.EndHorizontal();
+        GUILayout.FlexibleSpace();
+        GUILayout.EndHorizontal();
+        if (audioMixer != null)
+        {
+            audioMixer.SetFloat("MusicVolume", Mathf.Log10(musicVolume) * 20);
+        }
+
+        GUILayout.Space(20);
+
+        GUILayout.Label("SFX Volume", labelStyle, GUILayout.Height(50));
+        GUILayout.BeginHorizontal();
+        GUILayout.FlexibleSpace();
+        GUILayout.BeginHorizontal();
+        sfxVolume = GUILayout.HorizontalSlider(sfxVolume, 0f, 1f, GUILayout.Width(500), GUILayout.Height(30));
+        GUILayout.Label(((int)(sfxVolume * 100)).ToString() + "%", percentageStyle, GUILayout.Width(100), GUILayout.Height(30));
+        GUILayout.EndHorizontal();
+        GUILayout.FlexibleSpace();
+        GUILayout.EndHorizontal();
+        if (audioMixer != null)
+        {
+            audioMixer.SetFloat("SFXVolume", Mathf.Log10(sfxVolume) * 20);
+        }
+
+        GUILayout.Space(40);
+
+        if (GUILayout.Button("Save", buttonStyle, GUILayout.Height(60)))
+        {
+            PlayerPrefs.SetFloat("MasterVolume", masterVolume);
+            PlayerPrefs.SetFloat("MusicVolume", musicVolume);
+            PlayerPrefs.SetFloat("SFXVolume", sfxVolume);
+            PlayerPrefs.Save();
+            Debug.Log("Sound settings saved.");
+        }
+    }
+
+    void DrawControlsSettings()
+    {
+        GUIStyle backButtonStyle = new GUIStyle(GUI.skin.button);
+        backButtonStyle.fontSize = 24;
+        if (GUI.Button(new Rect(10, 10, 100, 40), "Back", backButtonStyle))
+        {
+            currentState = MenuState.Options;
+        }
+
+        GUILayout.Space(20);
+
+        GUIStyle titleStyle = new GUIStyle(GUI.skin.label);
+        titleStyle.fontSize = 56;
+        titleStyle.alignment = TextAnchor.MiddleCenter;
+        GUILayout.Label("Controls", titleStyle, GUILayout.Height(80));
+
+        GUIStyle labelStyle = new GUIStyle(GUI.skin.label);
+        labelStyle.fontSize = 36;
+        labelStyle.alignment = TextAnchor.MiddleCenter;
+
+        GUIStyle buttonStyle = new GUIStyle(GUI.skin.button);
+        buttonStyle.fontSize = 28;
+
+        GUILayout.Space(20);
+
+        string shootLabel = isRebindingShoot ? "Press a key..." : $"Shoot: {shootKey}";
+        if (GUILayout.Button(shootLabel, buttonStyle, GUILayout.Height(50)))
+        {
+            isRebindingShoot = true;
+            isRebindingCover = false;
+            isRebindingPause = false;
+        }
+
+        GUILayout.Space(20);
+
+        string coverLabel = isRebindingCover ? "Press a key..." : $"Cover: {coverKey}";
+        if (GUILayout.Button(coverLabel, buttonStyle, GUILayout.Height(50)))
+        {
+            isRebindingShoot = false;
+            isRebindingCover = true;
+            isRebindingPause = false;
+        }
+
+        GUILayout.Space(20);
+
+        string pauseLabel = isRebindingPause ? "Press a key..." : $"Pause: {pauseKey}";
+        if (GUILayout.Button(pauseLabel, buttonStyle, GUILayout.Height(50)))
+        {
+            isRebindingShoot = false;
+            isRebindingCover = false;
+            isRebindingPause = true;
+        }
+
+        GUILayout.Space(40);
+
+        if (GUILayout.Button("Reset to Default", buttonStyle, GUILayout.Height(60)))
+        {
+            shootKey = KeyCode.Mouse0;
+            coverKey = KeyCode.Space;
+            pauseKey = KeyCode.Escape;
+            PlayerPrefs.SetString("ShootKey", shootKey.ToString());
+            PlayerPrefs.SetString("CoverKey", coverKey.ToString());
+            PlayerPrefs.SetString("PauseKey", pauseKey.ToString());
+            PlayerPrefs.Save();
         }
     }
 }
