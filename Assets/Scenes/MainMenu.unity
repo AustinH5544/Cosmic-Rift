@@ -456,6 +456,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   guiSkin: {fileID: 11400000, guid: 9705c0e7595e14d42bcd9e476468d8d7, type: 2}
+  audioMixer: {fileID: 0}
+  crosshairTexture: {fileID: 2800000, guid: 1d78ea13ed0615c4996735add71cbd43, type: 3}
+  trackpadSensitivity: 1200
 --- !u!4 &879424040
 Transform:
   m_ObjectHideFlags: 0

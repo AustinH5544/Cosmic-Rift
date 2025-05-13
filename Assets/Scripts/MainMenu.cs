@@ -24,6 +24,11 @@ public class MainMenu : MonoBehaviour
     private bool isRebindingCover = false;
     private bool isRebindingPause = false;
 
+    // Crosshair variables
+    public Texture2D crosshairTexture; // Assign this in the Inspector with your Asset Store crosshair
+    private Color crosshairColor;
+    private Rect crosshairRect;
+
     void Start()
     {
         selectedColorIndex = PlayerPrefs.GetInt("CrosshairColorIndex", 0);
@@ -40,6 +45,44 @@ public class MainMenu : MonoBehaviour
         shootKey = (KeyCode)System.Enum.Parse(typeof(KeyCode), PlayerPrefs.GetString("ShootKey", KeyCode.Mouse0.ToString()));
         coverKey = (KeyCode)System.Enum.Parse(typeof(KeyCode), PlayerPrefs.GetString("CoverKey", KeyCode.Space.ToString()));
         pauseKey = (KeyCode)System.Enum.Parse(typeof(KeyCode), PlayerPrefs.GetString("PauseKey", KeyCode.Escape.ToString()));
+
+        // Initialize crosshair
+        if (crosshairTexture == null)
+        {
+            Debug.LogError("Crosshair texture is not assigned in the Inspector!");
+            crosshairTexture = new Texture2D(10, 10);
+            for (int y = 0; y < crosshairTexture.height; y++)
+            {
+                for (int x = 0; x < crosshairTexture.width; x++)
+                {
+                    crosshairTexture.SetPixel(x, y, Color.white);
+                }
+            }
+            crosshairTexture.Apply();
+        }
+
+        // Update crosshair color based on selectedColorIndex
+        UpdateCrosshairColor();
+
+        // Hide the default mouse pointer
+        Cursor.visible = false;
+    }
+
+    void Update()
+    {
+        // Reinforce hiding the cursor in case something else shows it
+        if (Cursor.visible)
+        {
+            Cursor.visible = false;
+            Debug.Log("Cursor visibility reset to false in Update (MainMenu).");
+        }
+
+        // Update the crosshair position to match the mouse position
+        Vector2 mousePosition = Input.mousePosition;
+        crosshairRect = new Rect(mousePosition.x - crosshairTexture.width / 2f, Screen.height - mousePosition.y - crosshairTexture.height / 2f, crosshairTexture.width, crosshairTexture.height);
+
+        // Debug log to confirm crosshair position
+        Debug.Log($"Crosshair Position (Main Menu) - X: {mousePosition.x}, Y: {Screen.height - mousePosition.y}");
     }
 
     void OnGUI()
@@ -47,6 +90,7 @@ public class MainMenu : MonoBehaviour
         GUI.skin = guiSkin;
         windowRect = GUI.Window(0, windowRect, DrawMenuWindow, "");
 
+        // Handle key rebinding
         if (isRebindingShoot || isRebindingCover || isRebindingPause)
         {
             Event e = Event.current;
@@ -133,6 +177,11 @@ public class MainMenu : MonoBehaviour
                 }
             }
         }
+
+        // Draw the crosshair at the mouse position with the selected color tint
+        GUI.color = crosshairColor;
+        GUI.DrawTexture(crosshairRect, crosshairTexture);
+        GUI.color = Color.white;
     }
 
     void DrawMenuWindow(int windowID)
@@ -205,6 +254,7 @@ public class MainMenu : MonoBehaviour
             selectedColorIndex = (selectedColorIndex + 1) % crosshairColors.Length;
             PlayerPrefs.SetInt("CrosshairColorIndex", selectedColorIndex);
             PlayerPrefs.Save();
+            UpdateCrosshairColor();
         }
     }
 
@@ -440,6 +490,19 @@ public class MainMenu : MonoBehaviour
             PlayerPrefs.SetString("CoverKey", coverKey.ToString());
             PlayerPrefs.SetString("PauseKey", pauseKey.ToString());
             PlayerPrefs.Save();
+            Debug.Log("Controls reset to default: Shoot (Left Mouse), Cover (Space), Pause (Escape)");
         }
+    }
+
+    void UpdateCrosshairColor()
+    {
+        // Update the crosshair color based on the selectedColorIndex
+        crosshairColor = selectedColorIndex switch
+        {
+            0 => Color.red,
+            1 => Color.green,
+            2 => Color.blue,
+            _ => Color.red
+        };
     }
 }
