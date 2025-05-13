@@ -23,6 +23,8 @@ public class MainMenu : MonoBehaviour
     private bool isRebindingShoot = false;
     private bool isRebindingCover = false;
     private bool isRebindingPause = false;
+    private bool isRebindingLocked = false;
+    private float rebindingCooldown = 0f;
 
     public Texture2D crosshairTexture;
     private Color crosshairColor;
@@ -47,7 +49,6 @@ public class MainMenu : MonoBehaviour
 
         if (crosshairTexture == null)
         {
-            Debug.LogError("Crosshair texture is not assigned in the Inspector!");
             crosshairTexture = new Texture2D(10, 10);
             for (int y = 0; y < crosshairTexture.height; y++)
             {
@@ -69,105 +70,123 @@ public class MainMenu : MonoBehaviour
         if (Cursor.visible)
         {
             Cursor.visible = false;
-            Debug.Log("Cursor visibility reset to false in Update (MainMenu).");
         }
 
         Vector2 mousePosition = Input.mousePosition;
         crosshairRect = new Rect(mousePosition.x - crosshairTexture.width / 2f, Screen.height - mousePosition.y - crosshairTexture.height / 2f, crosshairTexture.width, crosshairTexture.height);
 
+        if (rebindingCooldown > 0)
+        {
+            rebindingCooldown -= Time.deltaTime;
+            if (rebindingCooldown <= 0)
+            {
+                isRebindingLocked = false;
+            }
+        }
+
+        if (isRebindingShoot || isRebindingCover || isRebindingPause)
+        {
+            foreach (KeyCode keyCode in System.Enum.GetValues(typeof(KeyCode)))
+            {
+                if (Input.GetKeyDown(keyCode))
+                {
+                    if (keyCode != KeyCode.None && keyCode != KeyCode.Escape)
+                    {
+                        if (isRebindingShoot)
+                        {
+                            shootKey = keyCode;
+                            isRebindingShoot = false;
+                        }
+                        else if (isRebindingCover)
+                        {
+                            coverKey = keyCode;
+                            isRebindingCover = false;
+                        }
+                        else if (isRebindingPause)
+                        {
+                            pauseKey = keyCode;
+                            isRebindingPause = false;
+                        }
+
+                        PlayerPrefs.SetString("ShootKey", shootKey.ToString());
+                        PlayerPrefs.SetString("CoverKey", coverKey.ToString());
+                        PlayerPrefs.SetString("PauseKey", pauseKey.ToString());
+                        PlayerPrefs.Save();
+
+                        isRebindingLocked = true;
+                        rebindingCooldown = 0.2f;
+                    }
+                    else if (keyCode == KeyCode.Escape)
+                    {
+                        isRebindingShoot = false;
+                        isRebindingCover = false;
+                        isRebindingPause = false;
+
+                        isRebindingLocked = true;
+                        rebindingCooldown = 0.2f;
+                    }
+                }
+            }
+
+            if (Input.GetMouseButtonDown(0))
+            {
+                if (isRebindingShoot)
+                {
+                    shootKey = KeyCode.Mouse0;
+                    isRebindingShoot = false;
+                }
+                else if (isRebindingCover)
+                {
+                    coverKey = KeyCode.Mouse0;
+                    isRebindingCover = false;
+                }
+                else if (isRebindingPause)
+                {
+                    pauseKey = KeyCode.Mouse0;
+                    isRebindingPause = false;
+                }
+
+                PlayerPrefs.SetString("ShootKey", shootKey.ToString());
+                PlayerPrefs.SetString("CoverKey", coverKey.ToString());
+                PlayerPrefs.SetString("PauseKey", pauseKey.ToString());
+                PlayerPrefs.Save();
+
+                isRebindingLocked = true;
+                rebindingCooldown = 0.2f;
+            }
+            else if (Input.GetMouseButtonDown(1))
+            {
+                if (isRebindingShoot)
+                {
+                    shootKey = KeyCode.Mouse1;
+                    isRebindingShoot = false;
+                }
+                else if (isRebindingCover)
+                {
+                    coverKey = KeyCode.Mouse1;
+                    isRebindingCover = false;
+                }
+                else if (isRebindingPause)
+                {
+                    pauseKey = KeyCode.Mouse1;
+                    isRebindingPause = false;
+                }
+
+                PlayerPrefs.SetString("ShootKey", shootKey.ToString());
+                PlayerPrefs.SetString("CoverKey", coverKey.ToString());
+                PlayerPrefs.SetString("PauseKey", pauseKey.ToString());
+                PlayerPrefs.Save();
+
+                isRebindingLocked = true;
+                rebindingCooldown = 0.2f;
+            }
+        }
     }
 
     void OnGUI()
     {
         GUI.skin = guiSkin;
         windowRect = GUI.Window(0, windowRect, DrawMenuWindow, "");
-
-        if (isRebindingShoot || isRebindingCover || isRebindingPause)
-        {
-            Event e = Event.current;
-            if (e.isKey)
-            {
-                KeyCode newKey = e.keyCode;
-                if (newKey != KeyCode.None && newKey != KeyCode.Escape)
-                {
-                    if (isRebindingShoot)
-                    {
-                        shootKey = newKey;
-                        isRebindingShoot = false;
-                    }
-                    else if (isRebindingCover)
-                    {
-                        coverKey = newKey;
-                        isRebindingCover = false;
-                    }
-                    else if (isRebindingPause)
-                    {
-                        pauseKey = newKey;
-                        isRebindingPause = false;
-                    }
-
-                    PlayerPrefs.SetString("ShootKey", shootKey.ToString());
-                    PlayerPrefs.SetString("CoverKey", coverKey.ToString());
-                    PlayerPrefs.SetString("PauseKey", pauseKey.ToString());
-                    PlayerPrefs.Save();
-                }
-                else if (newKey == KeyCode.Escape)
-                {
-                    isRebindingShoot = false;
-                    isRebindingCover = false;
-                    isRebindingPause = false;
-                }
-            }
-            else if (e.isMouse)
-            {
-                if (e.button == 0)
-                {
-                    if (isRebindingShoot)
-                    {
-                        shootKey = KeyCode.Mouse0;
-                        isRebindingShoot = false;
-                    }
-                    else if (isRebindingCover)
-                    {
-                        coverKey = KeyCode.Mouse0;
-                        isRebindingCover = false;
-                    }
-                    else if (isRebindingPause)
-                    {
-                        pauseKey = KeyCode.Mouse0;
-                        isRebindingPause = false;
-                    }
-
-                    PlayerPrefs.SetString("ShootKey", shootKey.ToString());
-                    PlayerPrefs.SetString("CoverKey", coverKey.ToString());
-                    PlayerPrefs.SetString("PauseKey", pauseKey.ToString());
-                    PlayerPrefs.Save();
-                }
-                else if (e.button == 1)
-                {
-                    if (isRebindingShoot)
-                    {
-                        shootKey = KeyCode.Mouse1;
-                        isRebindingShoot = false;
-                    }
-                    else if (isRebindingCover)
-                    {
-                        coverKey = KeyCode.Mouse1;
-                        isRebindingCover = false;
-                    }
-                    else if (isRebindingPause)
-                    {
-                        pauseKey = KeyCode.Mouse1;
-                        isRebindingPause = false;
-                    }
-
-                    PlayerPrefs.SetString("ShootKey", shootKey.ToString());
-                    PlayerPrefs.SetString("CoverKey", coverKey.ToString());
-                    PlayerPrefs.SetString("PauseKey", pauseKey.ToString());
-                    PlayerPrefs.Save();
-                }
-            }
-        }
 
         GUI.color = crosshairColor;
         GUI.DrawTexture(crosshairRect, crosshairTexture);
@@ -290,7 +309,6 @@ public class MainMenu : MonoBehaviour
 
         if (GUILayout.Button("Add Modifiers", buttonStyle, GUILayout.Height(90)))
         {
-
         }
     }
 
@@ -325,7 +343,6 @@ public class MainMenu : MonoBehaviour
 
         if (GUILayout.Button("Resolution", buttonStyle, GUILayout.Height(90)))
         {
-            Debug.Log("Resolution Settings (TBD)");
         }
     }
 
@@ -412,7 +429,6 @@ public class MainMenu : MonoBehaviour
             PlayerPrefs.SetFloat("MusicVolume", musicVolume);
             PlayerPrefs.SetFloat("SFXVolume", sfxVolume);
             PlayerPrefs.Save();
-            Debug.Log("Sound settings saved.");
         }
     }
 
@@ -442,7 +458,7 @@ public class MainMenu : MonoBehaviour
         GUILayout.Space(20);
 
         string shootLabel = isRebindingShoot ? "Press a key..." : $"Shoot: {shootKey}";
-        if (GUILayout.Button(shootLabel, buttonStyle, GUILayout.Height(50)))
+        if (!isRebindingLocked && GUILayout.Button(shootLabel, buttonStyle, GUILayout.Height(50)))
         {
             isRebindingShoot = true;
             isRebindingCover = false;
@@ -452,7 +468,7 @@ public class MainMenu : MonoBehaviour
         GUILayout.Space(20);
 
         string coverLabel = isRebindingCover ? "Press a key..." : $"Cover: {coverKey}";
-        if (GUILayout.Button(coverLabel, buttonStyle, GUILayout.Height(50)))
+        if (!isRebindingLocked && GUILayout.Button(coverLabel, buttonStyle, GUILayout.Height(50)))
         {
             isRebindingShoot = false;
             isRebindingCover = true;
@@ -462,7 +478,7 @@ public class MainMenu : MonoBehaviour
         GUILayout.Space(20);
 
         string pauseLabel = isRebindingPause ? "Press a key..." : $"Pause: {pauseKey}";
-        if (GUILayout.Button(pauseLabel, buttonStyle, GUILayout.Height(50)))
+        if (!isRebindingLocked && GUILayout.Button(pauseLabel, buttonStyle, GUILayout.Height(50)))
         {
             isRebindingShoot = false;
             isRebindingCover = false;
