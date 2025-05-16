@@ -47,7 +47,7 @@ public class CrosshairController : MonoBehaviour
         Vector2 mousePosition = Input.mousePosition;
         crosshairRect = new Rect(mousePosition.x - crosshairTexture.width / 2f, Screen.height - mousePosition.y - crosshairTexture.height / 2f, crosshairTexture.width, crosshairTexture.height);
 
-        if (Input.GetKeyDown(shootKey))
+        if (Input.GetKeyDown(shootKey) && CanShoot())
         {
             Shoot();
         }
@@ -55,6 +55,8 @@ public class CrosshairController : MonoBehaviour
 
     void OnGUI()
     {
+        if (!CanShoot()) return;
+
         GUI.color = crosshairColor;
         GUI.DrawTexture(crosshairRect, crosshairTexture);
         GUI.color = Color.white;
@@ -82,5 +84,16 @@ public class CrosshairController : MonoBehaviour
         }
 
         Cursor.visible = true;
+    }
+
+    bool CanShoot()
+    {
+        var coverManager = Object.FindFirstObjectByType<CoverTransitionManager>();
+        var coverController = Object.FindFirstObjectByType<CoverController>();
+
+        bool inCombat = coverManager != null && coverManager.IsInCombat;
+        bool notInCover = coverController != null && !coverController.IsInCover();
+
+        return inCombat && notInCover;
     }
 }

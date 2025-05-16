@@ -11,16 +11,20 @@ public class CoverController : MonoBehaviour
     private bool isInCover = true;
     private float targetY;
 
+    private CoverTransitionManager transitionManager;
+
     void Start()
     {
         isInCover = false;
         targetY = standY;
         SetSplineY(standY);
+
+        transitionManager = Object.FindFirstObjectByType<CoverTransitionManager>();
     }
 
     void Update()
     {
-        if (!FindObjectOfType<CoverTransitionManager>().IsInCombat)
+        if (transitionManager == null || !transitionManager.IsInCombat)
             return;
 
         if (Input.GetKeyDown(KeyCode.Space))
