@@ -209,7 +209,7 @@ public class GameManager : MonoBehaviour
             Time.timeScale = 1f;
             if (crosshairController != null)
             {
-                crosshairController.enabled = true;
+                crosshairController.SetCanShoot(true);
             }
             currentState = MenuState.None;
         }
@@ -412,7 +412,7 @@ public class GameManager : MonoBehaviour
         Time.timeScale = 0f;
         if (crosshairController != null)
         {
-            crosshairController.enabled = false;
+            crosshairController.SetCanShoot(false);
         }
         currentState = MenuState.GameOver;
     }
@@ -422,7 +422,7 @@ public class GameManager : MonoBehaviour
         Time.timeScale = 0f;
         if (crosshairController != null)
         {
-            crosshairController.enabled = false;
+            crosshairController.SetCanShoot(false);
         }
         currentState = MenuState.Pause;
     }

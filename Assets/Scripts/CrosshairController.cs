@@ -10,6 +10,7 @@ public class CrosshairController : MonoBehaviour
     private KeyCode shootKey;
     private Rect crosshairRect;
     private int score = 0;
+    private bool canShoot = true;
 
     void Start()
     {
@@ -55,7 +56,7 @@ public class CrosshairController : MonoBehaviour
         Vector2 mousePosition = Input.mousePosition;
         crosshairRect = new Rect(mousePosition.x - crosshairTexture.width / 2f, Screen.height - mousePosition.y - crosshairTexture.height / 2f, crosshairTexture.width, crosshairTexture.height);
 
-        if (Input.GetKeyDown(shootKey))
+        if (canShoot && Input.GetKeyDown(shootKey))
         {
             Shoot();
         }
@@ -100,5 +101,10 @@ public class CrosshairController : MonoBehaviour
         }
 
         Cursor.visible = true;
+    }
+
+    public void SetCanShoot(bool value)
+    {
+        canShoot = value;
     }
 }
