@@ -1,12 +1,15 @@
 using UnityEngine;
+using TMPro;
 
 public class CrosshairController : MonoBehaviour
 {
     public Texture2D crosshairTexture;
+    public TMP_Text scoreText;
 
     private Color crosshairColor;
     private KeyCode shootKey;
     private Rect crosshairRect;
+    private int score = 0;
 
     void Start()
     {
@@ -34,6 +37,11 @@ public class CrosshairController : MonoBehaviour
             crosshairTexture.Apply();
         }
 
+        if (scoreText != null)
+        {
+            scoreText.text = "Score: 0";
+        }
+
         Cursor.visible = false;
     }
 
@@ -47,7 +55,7 @@ public class CrosshairController : MonoBehaviour
         Vector2 mousePosition = Input.mousePosition;
         crosshairRect = new Rect(mousePosition.x - crosshairTexture.width / 2f, Screen.height - mousePosition.y - crosshairTexture.height / 2f, crosshairTexture.width, crosshairTexture.height);
 
-        if (Input.GetKeyDown(shootKey) && CanShoot())
+        if (Input.GetKeyDown(shootKey))
         {
             Shoot();
         }
@@ -55,8 +63,6 @@ public class CrosshairController : MonoBehaviour
 
     void OnGUI()
     {
-        if (!CanShoot()) return;
-
         GUI.color = crosshairColor;
         GUI.DrawTexture(crosshairRect, crosshairTexture);
         GUI.color = Color.white;
@@ -71,8 +77,18 @@ public class CrosshairController : MonoBehaviour
         {
             if (hit.collider.CompareTag("Target"))
             {
+                score += 10;
+                UpdateScoreDisplay();
                 Destroy(hit.collider.gameObject);
             }
+        }
+    }
+
+    void UpdateScoreDisplay()
+    {
+        if (scoreText != null)
+        {
+            scoreText.text = "Score: " + score;
         }
     }
 
@@ -84,16 +100,5 @@ public class CrosshairController : MonoBehaviour
         }
 
         Cursor.visible = true;
-    }
-
-    bool CanShoot()
-    {
-        var coverManager = Object.FindFirstObjectByType<CoverTransitionManager>();
-        var coverController = Object.FindFirstObjectByType<CoverController>();
-
-        bool inCombat = coverManager != null && coverManager.IsInCombat;
-        bool notInCover = coverController != null && !coverController.IsInCover();
-
-        return inCombat && notInCover;
     }
 }
