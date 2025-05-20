@@ -1317,7 +1317,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   timerText: {fileID: 1568761834}
   totalTime: 60
-  gameManager: {fileID: 0}
+  gameManager: {fileID: 835183810}
 --- !u!4 &1837749434
 Transform:
   m_ObjectHideFlags: 0
