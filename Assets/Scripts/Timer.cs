@@ -6,6 +6,7 @@ public class Timer : MonoBehaviour
 {
     public TMP_Text timerText;
     public float totalTime = 60f;
+    public GameManager gameManager;
 
     private float timeRemaining;
 
@@ -38,5 +39,9 @@ public class Timer : MonoBehaviour
 
     void OnTimerEnd()
     {
+        if (gameManager != null)
+        {
+            gameManager.ShowGameOverScreen();
+        }
     }
 }
