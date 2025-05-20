@@ -5,6 +5,7 @@ public class CrosshairController : MonoBehaviour
 {
     public Texture2D crosshairTexture;
     public TMP_Text scoreText;
+    public TargetSpawner targetSpawner;
 
     private Color crosshairColor;
     private KeyCode shootKey;
@@ -80,6 +81,10 @@ public class CrosshairController : MonoBehaviour
             {
                 score += 10;
                 UpdateScoreDisplay();
+                if (targetSpawner != null)
+                {
+                    targetSpawner.OnTargetDestroyed();
+                }
                 Destroy(hit.collider.gameObject);
             }
         }
