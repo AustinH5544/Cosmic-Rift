@@ -1,9 +1,10 @@
 using UnityEngine;
+using System.Collections.Generic;
 
 public class EnemyWaveManager : MonoBehaviour
 {
-    [SerializeField] private GameObject enemyPrefab;
-    [SerializeField] private Transform spawnPoint;
+    [SerializeField] private List<GameObject> enemyPrefabs;     // Prefabs with multiple children (tagged "Target")
+    [SerializeField] private List<Transform> spawnPoints;       // Each is a parent with multiple spawn positions
 
     private int enemiesAlive = 0;
 
@@ -19,22 +20,53 @@ public class EnemyWaveManager : MonoBehaviour
 
     public void SpawnWave(int index)
     {
-        Debug.Log("Spawning enemy...");
-
+        // Clean up previous enemies
         foreach (var oldTarget in GameObject.FindGameObjectsWithTag("Target"))
         {
             Destroy(oldTarget);
         }
 
-        GameObject enemy = Instantiate(enemyPrefab, spawnPoint.position, Quaternion.identity);
-        enemiesAlive = 1;
+        if (index < 0 || index >= enemyPrefabs.Count || index >= spawnPoints.Count)
+        {
+            Debug.LogWarning("Invalid index for enemy prefab or spawn point: " + index);
+            return;
+        }
 
-        Debug.Log($"Enemy spawned at {spawnPoint.position}, enemiesAlive = {enemiesAlive}");
+        GameObject wave = Instantiate(enemyPrefabs[index], Vector3.zero, Quaternion.identity);
+        enemiesAlive = 0;
+
+        Transform spawnGroup = spawnPoints[index];
+        List<Transform> spawnLocations = new List<Transform>();
+        foreach (Transform child in spawnGroup)
+        {
+            spawnLocations.Add(child);
+        }
+
+        int spawnIndex = 0;
+
+        foreach (Transform child in wave.transform)
+        {
+            if (child.CompareTag("Target"))
+            {
+                Transform spawnPoint = spawnLocations[spawnIndex % spawnLocations.Count];
+                child.position = spawnPoint.position;
+
+                enemiesAlive++;
+                spawnIndex++;
+            }
+            else
+            {
+                Debug.LogWarning($"Enemy prefab child '{child.name}' is missing the 'Target' tag.");
+            }
+        }
+
+        Debug.Log($"[SpawnWave] Wave {index} spawned with {enemiesAlive} enemies.");
     }
 
     void HandleEnemyDeath()
     {
-        enemiesAlive--;
+        enemiesAlive = Mathf.Max(0, enemiesAlive - 1);
+        Debug.Log($"[EnemyDeath] enemiesAlive = {enemiesAlive}");
     }
 
     public bool IsWaveCleared()
