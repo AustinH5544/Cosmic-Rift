@@ -19,6 +19,7 @@ public class TargetSpawner : MonoBehaviour
     {
         spawnTimer = Random.Range(spawnIntervalMin, spawnIntervalMax);
         activeTargetCount = 0;
+        Debug.Log($"TargetSpawner initialized. Max active targets: {maxActiveTargets}");
     }
 
     void Update()
@@ -30,17 +31,15 @@ public class TargetSpawner : MonoBehaviour
         {
             SpawnTarget();
             spawnTimer = Random.Range(spawnIntervalMin, spawnIntervalMax);
+            Debug.Log($"Spawning new target. Active targets: {activeTargetCount}");
         }
     }
 
     void SpawnTarget()
     {
-        // Adjust for the ShootingRange prefab's rotation (e.g., (0, 90, 0))
-        // Local X (spread across wall) aligns with world Z
-        // Local Z (fixed on wall) aligns with world -X
-        float randomZ = Random.Range(wallXMin, wallXMax); // Spread along world Z (wall's width)
-        float randomY = Random.Range(wallYMin, wallYMax); // Spread along world Y (wall's height)
-        float fixedX = -wallZPosition; // Fixed position along world X (wall's depth)
+        float randomZ = Random.Range(wallXMin, wallXMax);
+        float randomY = Random.Range(wallYMin, wallYMax);
+        float fixedX = -wallZPosition;
 
         Vector3 spawnPosition = new Vector3(fixedX, randomY, randomZ);
 
@@ -53,5 +52,6 @@ public class TargetSpawner : MonoBehaviour
     {
         activeTargetCount--;
         if (activeTargetCount < 0) activeTargetCount = 0;
+        Debug.Log($"Target destroyed. Active targets now: {activeTargetCount}");
     }
 }
