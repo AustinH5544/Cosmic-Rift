@@ -7,7 +7,7 @@ public class GameManager : MonoBehaviour
     public CrosshairController crosshairController;
 
     private Rect windowRect = new Rect(Screen.width / 2 - 400, Screen.height / 2 - 350, 800, 700);
-    private enum MenuState { None, GameOver, Pause, Options, SoundSettings, ControlsSettings }
+    private enum MenuState { None, GameOver, Pause, Options, SoundSettings, ControlsSettings, Leaderboard }
     private MenuState currentState = MenuState.None;
 
     private float masterVolume = 1f;
@@ -22,6 +22,12 @@ public class GameManager : MonoBehaviour
     private bool isRebindingCover = false;
     private bool isRebindingPause = false;
 
+    private int[] highScores = new int[5];
+    private float[] highAccuracies = new float[5];
+    private string[] playerNames = new string[5];
+    private string currentPlayerName = "Player";
+    private bool nameSubmitted = false;
+
     void Start()
     {
         masterVolume = PlayerPrefs.GetFloat("MasterVolume", 1f);
@@ -31,6 +37,13 @@ public class GameManager : MonoBehaviour
         shootKey = (KeyCode)System.Enum.Parse(typeof(KeyCode), PlayerPrefs.GetString("ShootKey", KeyCode.Mouse0.ToString()));
         coverKey = (KeyCode)System.Enum.Parse(typeof(KeyCode), PlayerPrefs.GetString("CoverKey", KeyCode.Space.ToString()));
         pauseKey = (KeyCode)System.Enum.Parse(typeof(KeyCode), PlayerPrefs.GetString("PauseKey", KeyCode.Escape.ToString()));
+
+        for (int i = 0; i < 5; i++)
+        {
+            highScores[i] = PlayerPrefs.GetInt("HighScore" + i, 0);
+            highAccuracies[i] = PlayerPrefs.GetFloat("HighAccuracy" + i, 0f);
+            playerNames[i] = PlayerPrefs.GetString("PlayerName" + i, "-");
+        }
     }
 
     void Update()
@@ -157,6 +170,9 @@ public class GameManager : MonoBehaviour
             case MenuState.ControlsSettings:
                 DrawControlsSettings();
                 break;
+            case MenuState.Leaderboard:
+                DrawLeaderboard();
+                break;
         }
 
         GUILayout.EndArea();
@@ -171,24 +187,75 @@ public class GameManager : MonoBehaviour
         titleStyle.alignment = TextAnchor.MiddleCenter;
         GUILayout.Label("Game Over", titleStyle, GUILayout.Height(80));
 
+        GUIStyle labelStyle = new GUIStyle(GUI.skin.label);
+        labelStyle.fontSize = 36;
+        labelStyle.alignment = TextAnchor.MiddleCenter;
+
+        GUIStyle textFieldStyle = new GUIStyle(GUI.skin.textField);
+        textFieldStyle.fontSize = 36;
+        textFieldStyle.alignment = TextAnchor.MiddleCenter;
+        textFieldStyle.padding = new RectOffset(10, 10, 10, 10);
+
         GUIStyle buttonStyle = new GUIStyle(GUI.skin.button);
         buttonStyle.fontSize = 28;
 
-        if (GUILayout.Button("Main Menu", buttonStyle, GUILayout.Height(90)))
+        if (!nameSubmitted)
         {
-            Time.timeScale = 1f;
-            SceneManager.LoadScene("MainMenu");
-        }
+            GUILayout.Space(40);
+            GUILayout.BeginHorizontal();
+            GUILayout.FlexibleSpace();
+            GUILayout.Label("Enter Your Name:", labelStyle, GUILayout.Height(50));
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
 
-        if (GUILayout.Button("Restart", buttonStyle, GUILayout.Height(90)))
-        {
-            Time.timeScale = 1f;
-            SceneManager.LoadScene("ShootingRange");
-        }
+            GUILayout.Space(20);
+            GUILayout.BeginHorizontal();
+            GUILayout.FlexibleSpace();
+            currentPlayerName = GUILayout.TextField(currentPlayerName, 10, textFieldStyle, GUILayout.Height(70), GUILayout.Width(300));
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
 
-        if (GUILayout.Button("Options", buttonStyle, GUILayout.Height(90)))
+            GUILayout.Space(40); // Increased spacing between text field and button
+            GUILayout.BeginHorizontal();
+            GUILayout.FlexibleSpace();
+            if (GUILayout.Button("Submit", buttonStyle, GUILayout.Height(70), GUILayout.Width(200)))
+            {
+                nameSubmitted = true;
+                UpdateLeaderboard();
+            }
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+        }
+        else
         {
-            currentState = MenuState.Options;
+            GUILayout.Space(20);
+            if (GUILayout.Button("Main Menu", buttonStyle, GUILayout.Height(90)))
+            {
+                nameSubmitted = false;
+                Time.timeScale = 1f;
+                SceneManager.LoadScene("MainMenu");
+            }
+
+            if (GUILayout.Button("Restart", buttonStyle, GUILayout.Height(90)))
+            {
+                if (crosshairController != null)
+                {
+                    crosshairController.ResetStats();
+                }
+                nameSubmitted = false;
+                Time.timeScale = 1f;
+                SceneManager.LoadScene("ShootingRange");
+            }
+
+            if (GUILayout.Button("Options", buttonStyle, GUILayout.Height(90)))
+            {
+                currentState = MenuState.Options;
+            }
+
+            if (GUILayout.Button("Leaderboard", buttonStyle, GUILayout.Height(90)))
+            {
+                currentState = MenuState.Leaderboard;
+            }
         }
     }
 
@@ -222,6 +289,10 @@ public class GameManager : MonoBehaviour
 
         if (GUILayout.Button("Restart", buttonStyle, GUILayout.Height(90)))
         {
+            if (crosshairController != null)
+            {
+                crosshairController.ResetStats();
+            }
             Time.timeScale = 1f;
             SceneManager.LoadScene("ShootingRange");
         }
@@ -403,6 +474,72 @@ public class GameManager : MonoBehaviour
             PlayerPrefs.SetString("ShootKey", shootKey.ToString());
             PlayerPrefs.SetString("CoverKey", coverKey.ToString());
             PlayerPrefs.SetString("PauseKey", pauseKey.ToString());
+            PlayerPrefs.Save();
+        }
+    }
+
+    void DrawLeaderboard()
+    {
+        GUIStyle backButtonStyle = new GUIStyle(GUI.skin.button);
+        backButtonStyle.fontSize = 24;
+        if (GUI.Button(new Rect(10, 10, 100, 40), "Back", backButtonStyle))
+        {
+            currentState = MenuState.GameOver;
+        }
+
+        GUILayout.Space(20);
+
+        GUIStyle titleStyle = new GUIStyle(GUI.skin.label);
+        titleStyle.fontSize = 56;
+        titleStyle.alignment = TextAnchor.MiddleCenter;
+        GUILayout.Label("Leaderboard", titleStyle, GUILayout.Height(80));
+
+        GUIStyle entryStyle = new GUIStyle(GUI.skin.label);
+        entryStyle.fontSize = 28;
+        entryStyle.alignment = TextAnchor.MiddleCenter;
+
+        GUILayout.Space(20);
+
+        for (int i = 0; i < 5; i++)
+        {
+            string rank = (i + 1) + ". ";
+            string nameEntry = playerNames[i] != "-" ? playerNames[i] : "-";
+            string scoreEntry = highScores[i] > 0 ? highScores[i].ToString() : "-";
+            string accuracyEntry = highAccuracies[i] > 0 ? highAccuracies[i].ToString("F1") + "%" : "-";
+            GUILayout.Label($"{rank} {nameEntry} | Score: {scoreEntry} | Accuracy: {accuracyEntry}", entryStyle, GUILayout.Height(50));
+        }
+    }
+
+    void UpdateLeaderboard()
+    {
+        if (crosshairController != null)
+        {
+            int currentScore = crosshairController.GetScore();
+            float currentAccuracy = crosshairController.GetAccuracy();
+
+            for (int i = 0; i < 5; i++)
+            {
+                if (currentScore > highScores[i])
+                {
+                    for (int j = 4; j > i; j--)
+                    {
+                        highScores[j] = highScores[j - 1];
+                        highAccuracies[j] = highAccuracies[j - 1];
+                        playerNames[j] = playerNames[j - 1];
+                    }
+                    highScores[i] = currentScore;
+                    highAccuracies[i] = currentAccuracy;
+                    playerNames[i] = currentPlayerName;
+                    break;
+                }
+            }
+
+            for (int i = 0; i < 5; i++)
+            {
+                PlayerPrefs.SetInt("HighScore" + i, highScores[i]);
+                PlayerPrefs.SetFloat("HighAccuracy" + i, highAccuracies[i]);
+                PlayerPrefs.SetString("PlayerName" + i, playerNames[i]);
+            }
             PlayerPrefs.Save();
         }
     }

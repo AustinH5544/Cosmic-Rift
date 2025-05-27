@@ -1,6 +1,5 @@
 using UnityEngine;
 using TMPro;
-using System;
 
 public class Timer : MonoBehaviour
 {
@@ -33,8 +32,9 @@ public class Timer : MonoBehaviour
 
     void UpdateTimerDisplay()
     {
-        int seconds = Mathf.CeilToInt(timeRemaining);
-        timerText.text = seconds.ToString();
+        int minutes = Mathf.FloorToInt(timeRemaining / 60);
+        int seconds = Mathf.FloorToInt(timeRemaining % 60);
+        timerText.text = string.Format("{0:00}:{1:00}", minutes, seconds);
     }
 
     void OnTimerEnd()
