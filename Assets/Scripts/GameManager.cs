@@ -5,6 +5,7 @@ public class GameManager : MonoBehaviour
 {
     public GUISkin guiSkin;
     public CrosshairController crosshairController;
+    public AudioSource backgroundMusic;
 
     private Rect windowRect = new Rect(Screen.width / 2 - 400, Screen.height / 2 - 350, 800, 700);
     private enum MenuState { None, GameOver, Pause, Options, SoundSettings, ControlsSettings, Leaderboard }
@@ -43,6 +44,13 @@ public class GameManager : MonoBehaviour
             highScores[i] = PlayerPrefs.GetInt("HighScore" + i, 0);
             highAccuracies[i] = PlayerPrefs.GetFloat("HighAccuracy" + i, 0f);
             playerNames[i] = PlayerPrefs.GetString("PlayerName" + i, "-");
+        }
+
+        // Play background music for ShootingRange
+        if (backgroundMusic != null)
+        {
+            backgroundMusic.loop = true;
+            backgroundMusic.Play();
         }
     }
 
@@ -215,7 +223,7 @@ public class GameManager : MonoBehaviour
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
 
-            GUILayout.Space(40); // Increased spacing between text field and button
+            GUILayout.Space(40);
             GUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
             if (GUILayout.Button("Submit", buttonStyle, GUILayout.Height(70), GUILayout.Width(200)))

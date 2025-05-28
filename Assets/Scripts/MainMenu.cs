@@ -6,6 +6,7 @@ public class MainMenu : MonoBehaviour
 {
     public GUISkin guiSkin;
     public AudioMixer audioMixer;
+    public AudioSource backgroundMusic;
     private string[] crosshairColors = { "Red", "Green", "Blue" };
     private int selectedColorIndex = 0;
     private Rect windowRect = new Rect(Screen.width / 2 - 400, Screen.height / 2 - 350, 800, 700);
@@ -61,6 +62,13 @@ public class MainMenu : MonoBehaviour
         }
 
         UpdateCrosshairColor();
+
+        // Play background music
+        if (backgroundMusic != null)
+        {
+            backgroundMusic.loop = true; // Loop the music
+            backgroundMusic.Play();
+        }
 
         Cursor.visible = false;
     }
