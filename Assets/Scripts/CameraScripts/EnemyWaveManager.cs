@@ -10,12 +10,12 @@ public class EnemyWaveManager : MonoBehaviour
 
     void OnEnable()
     {
-        Enemy.OnAnyEnemyDeath += HandleEnemyDeath;
+        EnemyMain.OnAnyEnemyDeath += HandleEnemyDeath;
     }
 
     void OnDisable()
     {
-        Enemy.OnAnyEnemyDeath -= HandleEnemyDeath;
+        EnemyMain.OnAnyEnemyDeath -= HandleEnemyDeath;
     }
 
     public void SpawnWave(int index)
