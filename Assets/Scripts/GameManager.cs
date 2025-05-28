@@ -5,11 +5,12 @@ public class GameManager : MonoBehaviour
 {
     public GUISkin guiSkin;
     public CrosshairController crosshairController;
-    public AudioSource backgroundMusic;
+    public Timer timer;
+    public TargetSpawner targetSpawner;
 
-    private Rect windowRect = new Rect(Screen.width / 2 - 400, Screen.height / 2 - 350, 800, 700);
-    private enum MenuState { None, GameOver, Pause, Options, SoundSettings, ControlsSettings, Leaderboard }
-    private MenuState currentState = MenuState.None;
+    private Rect windowRect = new Rect(Screen.width / 2 - 500, Screen.height / 2 - 500, 1000, 1000);
+    private enum MenuState { Welcome, None, GameOver, Pause, Options, SoundSettings, ControlsSettings, Leaderboard }
+    private MenuState currentState = MenuState.Welcome;
 
     private float masterVolume = 1f;
     private float musicVolume = 1f;
@@ -29,6 +30,13 @@ public class GameManager : MonoBehaviour
     private string currentPlayerName = "Player";
     private bool nameSubmitted = false;
 
+    private enum WeaponType { Pistol, AutomaticRifle, Shotgun }
+    private WeaponType selectedWeapon = WeaponType.Pistol;
+    private string[] weaponNames = { "Pistol", "Automatic Rifle", "Shotgun" };
+
+    private string[] crosshairColors = { "Red", "Green", "Blue" };
+    private int selectedColorIndex;
+
     void Start()
     {
         masterVolume = PlayerPrefs.GetFloat("MasterVolume", 1f);
@@ -46,11 +54,33 @@ public class GameManager : MonoBehaviour
             playerNames[i] = PlayerPrefs.GetString("PlayerName" + i, "-");
         }
 
-        // Play background music for ShootingRange
-        if (backgroundMusic != null)
+        selectedColorIndex = PlayerPrefs.GetInt("CrosshairColorIndex", 0);
+
+        if (crosshairController != null)
         {
-            backgroundMusic.loop = true;
-            backgroundMusic.Play();
+            crosshairController.SetCanShoot(false);
+        }
+        else
+        {
+            Debug.LogWarning("CrosshairController reference is not assigned in GameManager!");
+        }
+
+        if (timer != null)
+        {
+            timer.enabled = false;
+        }
+        else
+        {
+            Debug.LogWarning("Timer reference is not assigned in GameManager!");
+        }
+
+        if (targetSpawner != null)
+        {
+            targetSpawner.enabled = false;
+        }
+        else
+        {
+            Debug.LogWarning("TargetSpawner reference is not assigned in GameManager!");
         }
     }
 
@@ -150,7 +180,7 @@ public class GameManager : MonoBehaviour
 
     void OnGUI()
     {
-        if (currentState != MenuState.None)
+        if (currentState != MenuState.None || currentState == MenuState.Welcome)
         {
             GUI.skin = guiSkin;
             windowRect = GUI.Window(0, windowRect, DrawMenuWindow, "");
@@ -159,10 +189,13 @@ public class GameManager : MonoBehaviour
 
     void DrawMenuWindow(int windowID)
     {
-        GUILayout.BeginArea(new Rect(40, 50, 720, 600));
+        GUILayout.BeginArea(new Rect(40, 50, 920, 900));
 
         switch (currentState)
         {
+            case MenuState.Welcome:
+                DrawWelcomeScreen();
+                break;
             case MenuState.GameOver:
                 DrawGameOverMenu();
                 break;
@@ -186,6 +219,99 @@ public class GameManager : MonoBehaviour
         GUILayout.EndArea();
     }
 
+    void DrawWelcomeScreen()
+    {
+        GUILayout.Space(30);
+
+        GUIStyle titleStyle = new GUIStyle(GUI.skin.label);
+        titleStyle.fontSize = 56;
+        titleStyle.alignment = TextAnchor.MiddleCenter;
+        titleStyle.wordWrap = true;
+        GUILayout.Label("Welcome to the Shooting Range", titleStyle, GUILayout.Height(140));
+
+        GUILayout.Space(30);
+
+        GUIStyle messageStyle = new GUIStyle(GUI.skin.label);
+        messageStyle.fontSize = 36;
+        messageStyle.alignment = TextAnchor.MiddleCenter;
+        messageStyle.wordWrap = true;
+        GUILayout.Label("Shoot as many targets as possible in 60 seconds", messageStyle, GUILayout.Height(120));
+
+        GUILayout.Space(30);
+
+        GUIStyle labelStyle = new GUIStyle(GUI.skin.label);
+        labelStyle.fontSize = 36;
+        labelStyle.alignment = TextAnchor.MiddleCenter;
+
+        GUILayout.BeginHorizontal();
+        GUILayout.FlexibleSpace();
+        GUILayout.Label("Choose Your Weapon:", labelStyle, GUILayout.Height(50));
+        GUILayout.FlexibleSpace();
+        GUILayout.EndHorizontal();
+
+        GUILayout.Space(20);
+
+        GUIStyle buttonStyle = new GUIStyle(GUI.skin.button);
+        buttonStyle.fontSize = 32;
+
+        GUILayout.BeginHorizontal();
+        GUILayout.FlexibleSpace();
+        for (int i = 0; i < weaponNames.Length; i++)
+        {
+            if (GUILayout.Button(weaponNames[i], buttonStyle, GUILayout.Width(300), GUILayout.Height(80)))
+            {
+                selectedWeapon = (WeaponType)i;
+            }
+            GUILayout.Space(15);
+        }
+        GUILayout.FlexibleSpace();
+        GUILayout.EndHorizontal();
+
+        GUILayout.Space(40);
+
+        GUILayout.BeginHorizontal();
+        GUILayout.FlexibleSpace();
+        GUILayout.Label("Crosshair Color:", labelStyle, GUILayout.Height(50));
+        GUILayout.FlexibleSpace();
+        GUILayout.EndHorizontal();
+
+        GUILayout.Space(20);
+
+        GUILayout.BeginHorizontal();
+        GUILayout.FlexibleSpace();
+        if (GUILayout.Button("Color: " + crosshairColors[selectedColorIndex], buttonStyle, GUILayout.Width(300), GUILayout.Height(80)))
+        {
+            selectedColorIndex = (selectedColorIndex + 1) % crosshairColors.Length;
+            PlayerPrefs.SetInt("CrosshairColorIndex", selectedColorIndex);
+            PlayerPrefs.Save();
+        }
+        GUILayout.FlexibleSpace();
+        GUILayout.EndHorizontal();
+
+        GUILayout.Space(50);
+
+        GUILayout.BeginHorizontal();
+        GUILayout.FlexibleSpace();
+        if (GUILayout.Button("Start", buttonStyle, GUILayout.Width(300), GUILayout.Height(110)))
+        {
+            currentState = MenuState.None;
+            if (crosshairController != null)
+            {
+                crosshairController.SetCanShoot(true);
+            }
+            if (timer != null)
+            {
+                timer.enabled = true;
+            }
+            if (targetSpawner != null)
+            {
+                targetSpawner.enabled = true;
+            }
+        }
+        GUILayout.FlexibleSpace();
+        GUILayout.EndHorizontal();
+    }
+
     void DrawGameOverMenu()
     {
         GUILayout.Space(20);
@@ -196,37 +322,37 @@ public class GameManager : MonoBehaviour
         GUILayout.Label("Game Over", titleStyle, GUILayout.Height(80));
 
         GUIStyle labelStyle = new GUIStyle(GUI.skin.label);
-        labelStyle.fontSize = 36;
+        labelStyle.fontSize = 48;
         labelStyle.alignment = TextAnchor.MiddleCenter;
 
         GUIStyle textFieldStyle = new GUIStyle(GUI.skin.textField);
-        textFieldStyle.fontSize = 36;
+        textFieldStyle.fontSize = 48;
         textFieldStyle.alignment = TextAnchor.MiddleCenter;
         textFieldStyle.padding = new RectOffset(10, 10, 10, 10);
 
         GUIStyle buttonStyle = new GUIStyle(GUI.skin.button);
-        buttonStyle.fontSize = 28;
+        buttonStyle.fontSize = 36;
 
         if (!nameSubmitted)
         {
-            GUILayout.Space(40);
+            GUILayout.Space(60);
             GUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
-            GUILayout.Label("Enter Your Name:", labelStyle, GUILayout.Height(50));
+            GUILayout.Label("Enter Your Name:", labelStyle, GUILayout.Height(70));
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
 
-            GUILayout.Space(20);
+            GUILayout.Space(30);
             GUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
-            currentPlayerName = GUILayout.TextField(currentPlayerName, 10, textFieldStyle, GUILayout.Height(70), GUILayout.Width(300));
+            currentPlayerName = GUILayout.TextField(currentPlayerName, 10, textFieldStyle, GUILayout.Height(90), GUILayout.Width(400));
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
 
-            GUILayout.Space(40);
+            GUILayout.Space(60);
             GUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
-            if (GUILayout.Button("Submit", buttonStyle, GUILayout.Height(70), GUILayout.Width(200)))
+            if (GUILayout.Button("Submit", buttonStyle, GUILayout.Height(90), GUILayout.Width(300)))
             {
                 nameSubmitted = true;
                 UpdateLeaderboard();
@@ -489,24 +615,28 @@ public class GameManager : MonoBehaviour
     void DrawLeaderboard()
     {
         GUIStyle backButtonStyle = new GUIStyle(GUI.skin.button);
-        backButtonStyle.fontSize = 24;
-        if (GUI.Button(new Rect(10, 10, 100, 40), "Back", backButtonStyle))
+        backButtonStyle.fontSize = 36;
+        GUILayout.BeginHorizontal();
+        GUILayout.FlexibleSpace();
+        if (GUILayout.Button("Back", backButtonStyle, GUILayout.Width(300), GUILayout.Height(90)))
         {
             currentState = MenuState.GameOver;
         }
+        GUILayout.FlexibleSpace();
+        GUILayout.EndHorizontal();
 
-        GUILayout.Space(20);
+        GUILayout.Space(40);
 
         GUIStyle titleStyle = new GUIStyle(GUI.skin.label);
-        titleStyle.fontSize = 56;
+        titleStyle.fontSize = 64;
         titleStyle.alignment = TextAnchor.MiddleCenter;
-        GUILayout.Label("Leaderboard", titleStyle, GUILayout.Height(80));
+        GUILayout.Label("Leaderboard", titleStyle, GUILayout.Height(100));
 
         GUIStyle entryStyle = new GUIStyle(GUI.skin.label);
-        entryStyle.fontSize = 28;
+        entryStyle.fontSize = 36;
         entryStyle.alignment = TextAnchor.MiddleCenter;
 
-        GUILayout.Space(20);
+        GUILayout.Space(40);
 
         for (int i = 0; i < 5; i++)
         {
@@ -514,7 +644,7 @@ public class GameManager : MonoBehaviour
             string nameEntry = playerNames[i] != "-" ? playerNames[i] : "-";
             string scoreEntry = highScores[i] > 0 ? highScores[i].ToString() : "-";
             string accuracyEntry = highAccuracies[i] > 0 ? highAccuracies[i].ToString("F1") + "%" : "-";
-            GUILayout.Label($"{rank} {nameEntry} | Score: {scoreEntry} | Accuracy: {accuracyEntry}", entryStyle, GUILayout.Height(50));
+            GUILayout.Label($"{rank} {nameEntry} | Score: {scoreEntry} | Accuracy: {accuracyEntry}", entryStyle, GUILayout.Height(70));
         }
     }
 

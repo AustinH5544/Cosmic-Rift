@@ -10,6 +10,7 @@ public class CrosshairController : MonoBehaviour
     public GameObject hitEffectPrefab;
     public AudioSource gunshotSound;
     public AudioSource reloadSound;
+
     private Color crosshairColor;
     private Color originalCrosshairColor;
     private KeyCode shootKey;
@@ -22,11 +23,13 @@ public class CrosshairController : MonoBehaviour
     private int totalShots = 0;
     private int totalHits = 0;
 
-    private int maxAmmo = 12;
+    private int maxAmmo = 16;
     private int currentAmmo;
     private bool isReloading = false;
     private float reloadDuration = 1.5f;
     private float reloadTimer = 0f;
+
+    private int currentWeapon = 0;
 
     void Start()
     {
@@ -137,29 +140,39 @@ public class CrosshairController : MonoBehaviour
             gunshotSound.Play();
         }
 
-        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-        RaycastHit hit;
-
-        if (Physics.Raycast(ray, out hit))
+        switch (currentWeapon)
         {
-            if (hit.collider.CompareTag("Target"))
-            {
-                totalHits++;
-                score += 10;
-                UpdateScoreDisplay();
-                if (targetSpawner != null)
+            case 0:
+                Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+                RaycastHit hit;
+                if (Physics.Raycast(ray, out hit))
                 {
-                    targetSpawner.OnTargetDestroyed();
+                    if (hit.collider.CompareTag("Target"))
+                    {
+                        totalHits++;
+                        score += 10;
+                        UpdateScoreDisplay();
+                        if (targetSpawner != null)
+                        {
+                            targetSpawner.OnTargetDestroyed();
+                        }
+                        if (hitEffectPrefab != null)
+                        {
+                            GameObject effect = Instantiate(hitEffectPrefab, hit.transform.position, Quaternion.identity);
+                            Destroy(effect, 1f);
+                        }
+                        crosshairColor = Color.yellow;
+                        flashTimer = flashDuration;
+                        Destroy(hit.collider.gameObject);
+                    }
                 }
-                if (hitEffectPrefab != null)
-                {
-                    GameObject effect = Instantiate(hitEffectPrefab, hit.transform.position, Quaternion.identity);
-                    Destroy(effect, 1f);
-                }
-                crosshairColor = Color.yellow;
-                flashTimer = flashDuration;
-                Destroy(hit.collider.gameObject);
-            }
+                break;
+            case 1:
+                Debug.Log("Automatic Rifle shooting logic to be implemented.");
+                break;
+            case 2:
+                Debug.Log("Shotgun shooting logic to be implemented.");
+                break;
         }
     }
 
@@ -235,6 +248,29 @@ public class CrosshairController : MonoBehaviour
         isReloading = false;
         reloadTimer = 0f;
         UpdateScoreDisplay();
+        UpdateAmmoDisplay();
+    }
+
+    public void SetWeapon(int weaponIndex)
+    {
+        currentWeapon = weaponIndex;
+
+        switch (currentWeapon)
+        {
+            case 0: // Pistol
+                maxAmmo = 16;
+                reloadDuration = 1.5f;
+                break;
+            case 1: // Automatic Rifle
+                maxAmmo = 30;
+                reloadDuration = 2f;
+                break;
+            case 2: // Shotgun
+                maxAmmo = 6;
+                reloadDuration = 2.5f;
+                break;
+        }
+        currentAmmo = maxAmmo;
         UpdateAmmoDisplay();
     }
 }

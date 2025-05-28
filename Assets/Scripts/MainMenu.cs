@@ -66,7 +66,7 @@ public class MainMenu : MonoBehaviour
         // Play background music
         if (backgroundMusic != null)
         {
-            backgroundMusic.loop = true; // Loop the music
+            backgroundMusic.loop = true;
             backgroundMusic.Play();
         }
 
