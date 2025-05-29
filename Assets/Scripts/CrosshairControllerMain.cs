@@ -1,12 +1,28 @@
 using UnityEngine;
+using TMPro; // Add for TextMeshProUGUI
 
 public class CrosshairControllerMain : MonoBehaviour
 {
     public Texture2D crosshairTexture;
+    public TextMeshProUGUI scoreText; // Changed to TextMeshProUGUI
+    public TextMeshProUGUI ammoText; // Changed to TextMeshProUGUI
+    public AudioClip shootSound;
+    public AudioClip reloadSound;
 
     private Color crosshairColor;
     private KeyCode shootKey;
     private Rect crosshairRect;
+
+    private float reloadTime = 2f;
+    private bool isReloading = false;
+    private int maxAmmo = 12;
+    private int currentAmmo;
+
+    private int score = 0;
+    private int shotsFired = 0;
+    private int shotsHit = 0;
+
+    private AudioSource audioSource;
 
     void Start()
     {
@@ -34,7 +50,14 @@ public class CrosshairControllerMain : MonoBehaviour
             crosshairTexture.Apply();
         }
 
+        currentAmmo = maxAmmo;
+
         Cursor.visible = false;
+
+        audioSource = gameObject.AddComponent<AudioSource>();
+        audioSource.volume = PlayerPrefs.GetFloat("SFXVolume", 1f);
+
+        UpdateUI();
     }
 
     void Update()
@@ -51,6 +74,17 @@ public class CrosshairControllerMain : MonoBehaviour
         {
             Shoot();
         }
+        else if (Input.GetKeyDown(KeyCode.R) || (currentAmmo == 0 && Input.GetKeyDown(shootKey)))
+        {
+            Reload();
+        }
+
+        if (audioSource != null)
+        {
+            audioSource.volume = PlayerPrefs.GetFloat("SFXVolume", 1f);
+        }
+
+        UpdateUI();
     }
 
     void OnGUI()
@@ -64,6 +98,9 @@ public class CrosshairControllerMain : MonoBehaviour
 
     void Shoot()
     {
+        shotsFired++;
+        currentAmmo--;
+
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         RaycastHit hit;
 
@@ -71,9 +108,40 @@ public class CrosshairControllerMain : MonoBehaviour
         {
             if (hit.collider.CompareTag("Target"))
             {
+                shotsHit++;
+                score += 10;
                 Destroy(hit.collider.gameObject);
             }
         }
+
+        if (audioSource != null && shootSound != null)
+        {
+            audioSource.PlayOneShot(shootSound);
+        }
+
+        if (currentAmmo == 0)
+        {
+            Reload();
+        }
+    }
+
+    void Reload()
+    {
+        if (isReloading) return;
+
+        isReloading = true;
+        Invoke(nameof(FinishReload), reloadTime);
+
+        if (audioSource != null && reloadSound != null)
+        {
+            audioSource.PlayOneShot(reloadSound);
+        }
+    }
+
+    void FinishReload()
+    {
+        currentAmmo = maxAmmo;
+        isReloading = false;
     }
 
     void OnDestroy()
@@ -93,7 +161,44 @@ public class CrosshairControllerMain : MonoBehaviour
 
         bool inCombat = coverManager != null && coverManager.IsInCombat;
         bool notInCover = coverController != null && !coverController.IsInCover();
+        bool canShootAmmo = currentAmmo > 0 && !isReloading;
 
-        return inCombat && notInCover;
+        return inCombat && notInCover && canShootAmmo;
+    }
+
+    private void UpdateUI()
+    {
+        if (scoreText != null)
+        {
+            scoreText.text = "Score: " + score;
+        }
+        if (ammoText != null)
+        {
+            ammoText.text = "Ammo: " + currentAmmo + "/" + maxAmmo;
+        }
+    }
+
+    public int GetScore()
+    {
+        return score;
+    }
+
+    public float GetAccuracy()
+    {
+        return shotsFired > 0 ? (float)shotsHit / shotsFired * 100f : 0f;
+    }
+
+    public void ResetStats()
+    {
+        score = 0;
+        shotsFired = 0;
+        shotsHit = 0;
+        currentAmmo = maxAmmo;
+        if (isReloading)
+        {
+            CancelInvoke(nameof(FinishReload));
+            isReloading = false;
+        }
+        UpdateUI();
     }
 }

@@ -6,16 +6,19 @@ public class CoverTransitionManagerMain : MonoBehaviour
 {
     [SerializeField] private CinemachineSplineDolly dolly;
     [SerializeField] private float moveDuration = 2f;
-    [SerializeField] private List<float> splineStops; // Normalized spline positions (e.g., 0f, 0.3f, 0.6f, 1f)
+    [SerializeField] private List<float> splineStops;
     [SerializeField] private EnemyWaveManager waveManager;
 
     private float timer = 0f;
     private float startPosition;
     private float endPosition;
-    private int currentIndex = 1; // index of the next spline stop
+    private int currentIndex = 1;
+
     private bool isMoving = false;
 
     public bool IsInCombat { get; private set; } = false;
+    public int CurrentIndex => currentIndex;
+    public List<float> SplineStops => splineStops; // Added public getter
 
     void Start()
     {
@@ -25,10 +28,7 @@ public class CoverTransitionManagerMain : MonoBehaviour
             return;
         }
 
-        // Set camera to initial position
         dolly.CameraPosition = splineStops[0];
-
-        // Start moving to the first real cover point
         MoveToCover(currentIndex);
     }
 
@@ -45,13 +45,10 @@ public class CoverTransitionManagerMain : MonoBehaviour
                 Debug.Log("[Transition] Arrived at target position");
                 isMoving = false;
                 IsInCombat = true;
-
-                // Spawn wave that matches the cover position we just arrived at
                 waveManager.SpawnWave(currentIndex - 1);
             }
         }
 
-        // Move to next cover point after wave is cleared
         if (!isMoving && IsInCombat && waveManager.IsWaveCleared())
         {
             currentIndex++;

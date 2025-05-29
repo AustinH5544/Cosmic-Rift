@@ -1,17 +1,14 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using UnityEngine.Audio;
 
-public class MainMenu : MonoBehaviour
+public class GameManagerMain : MonoBehaviour
 {
     public GUISkin guiSkin;
-    public AudioMixer audioMixer;
-    public AudioSource backgroundMusic;
-    private string[] crosshairColors = { "Red", "Green", "Blue" };
-    private int selectedColorIndex = 0;
-    private Rect windowRect = new Rect(Screen.width / 2 - 400, Screen.height / 2 - 350, 800, 700);
-    private enum MenuState { MainMenu, StageSelection, Options, SoundSettings, ControlsSettings }
-    private MenuState currentState = MenuState.MainMenu;
+    public CrosshairControllerMain crosshairController;
+
+    private Rect windowRect = new Rect(Screen.width / 2 - 500, Screen.height / 2 - 500, 1000, 1000);
+    private enum MenuState { None, GameOver, Pause, Options, SoundSettings, ControlsSettings, Leaderboard }
+    private MenuState currentState = MenuState.None;
 
     private float masterVolume = 1f;
     private float musicVolume = 1f;
@@ -24,71 +21,41 @@ public class MainMenu : MonoBehaviour
     private bool isRebindingShoot = false;
     private bool isRebindingCover = false;
     private bool isRebindingPause = false;
-    private bool isRebindingLocked = false;
-    private float rebindingCooldown = 0f;
 
-    public Texture2D crosshairTexture;
-    private Color crosshairColor;
-    private Rect crosshairRect;
+    private int[] highScores = new int[5];
+    private float[] highAccuracies = new float[5];
+    private string[] playerNames = new string[5];
+    private string currentPlayerName = "Player";
+    private bool nameSubmitted = false;
+
+    // Main Scene: Cover transition integration
+    private CoverTransitionManagerMain coverTransitionManager;
 
     void Start()
     {
-        selectedColorIndex = PlayerPrefs.GetInt("CrosshairColorIndex", 0);
         masterVolume = PlayerPrefs.GetFloat("MasterVolume", 1f);
         musicVolume = PlayerPrefs.GetFloat("MusicVolume", 1f);
         sfxVolume = PlayerPrefs.GetFloat("SFXVolume", 1f);
-        if (audioMixer != null)
-        {
-            audioMixer.SetFloat("MasterVolume", Mathf.Log10(masterVolume) * 20);
-            audioMixer.SetFloat("MusicVolume", Mathf.Log10(musicVolume) * 20);
-            audioMixer.SetFloat("SFXVolume", Mathf.Log10(sfxVolume) * 20);
-        }
 
         shootKey = (KeyCode)System.Enum.Parse(typeof(KeyCode), PlayerPrefs.GetString("ShootKey", KeyCode.Mouse0.ToString()));
         coverKey = (KeyCode)System.Enum.Parse(typeof(KeyCode), PlayerPrefs.GetString("CoverKey", KeyCode.Space.ToString()));
         pauseKey = (KeyCode)System.Enum.Parse(typeof(KeyCode), PlayerPrefs.GetString("PauseKey", KeyCode.Escape.ToString()));
 
-        if (crosshairTexture == null)
+        for (int i = 0; i < 5; i++)
         {
-            crosshairTexture = new Texture2D(10, 10);
-            for (int y = 0; y < crosshairTexture.height; y++)
-            {
-                for (int x = 0; x < crosshairTexture.width; x++)
-                {
-                    crosshairTexture.SetPixel(x, y, Color.white);
-                }
-            }
-            crosshairTexture.Apply();
+            highScores[i] = PlayerPrefs.GetInt("HighScore" + i, 0);
+            highAccuracies[i] = PlayerPrefs.GetFloat("HighAccuracy" + i, 0f);
+            playerNames[i] = PlayerPrefs.GetString("PlayerName" + i, "-");
         }
 
-        UpdateCrosshairColor();
-
-        if (backgroundMusic != null)
-        {
-            backgroundMusic.loop = true;
-            backgroundMusic.Play();
-        }
-
-        Cursor.visible = false;
+        coverTransitionManager = FindObjectOfType<CoverTransitionManagerMain>();
     }
 
     void Update()
     {
-        if (Cursor.visible)
+        if (currentState == MenuState.None && Input.GetKeyDown(pauseKey))
         {
-            Cursor.visible = false;
-        }
-
-        Vector2 mousePosition = Input.mousePosition;
-        crosshairRect = new Rect(mousePosition.x - crosshairTexture.width / 2f, Screen.height - mousePosition.y - crosshairTexture.height / 2f, crosshairTexture.width, crosshairTexture.height);
-
-        if (rebindingCooldown > 0)
-        {
-            rebindingCooldown -= Time.deltaTime;
-            if (rebindingCooldown <= 0)
-            {
-                isRebindingLocked = false;
-            }
+            ShowPauseMenu();
         }
 
         if (isRebindingShoot || isRebindingCover || isRebindingPause)
@@ -119,18 +86,12 @@ public class MainMenu : MonoBehaviour
                         PlayerPrefs.SetString("CoverKey", coverKey.ToString());
                         PlayerPrefs.SetString("PauseKey", pauseKey.ToString());
                         PlayerPrefs.Save();
-
-                        isRebindingLocked = true;
-                        rebindingCooldown = 0.2f;
                     }
                     else if (keyCode == KeyCode.Escape)
                     {
                         isRebindingShoot = false;
                         isRebindingCover = false;
                         isRebindingPause = false;
-
-                        isRebindingLocked = true;
-                        rebindingCooldown = 0.2f;
                     }
                 }
             }
@@ -157,9 +118,6 @@ public class MainMenu : MonoBehaviour
                 PlayerPrefs.SetString("CoverKey", coverKey.ToString());
                 PlayerPrefs.SetString("PauseKey", pauseKey.ToString());
                 PlayerPrefs.Save();
-
-                isRebindingLocked = true;
-                rebindingCooldown = 0.2f;
             }
             else if (Input.GetMouseButtonDown(1))
             {
@@ -183,37 +141,42 @@ public class MainMenu : MonoBehaviour
                 PlayerPrefs.SetString("CoverKey", coverKey.ToString());
                 PlayerPrefs.SetString("PauseKey", pauseKey.ToString());
                 PlayerPrefs.Save();
+            }
+        }
 
-                isRebindingLocked = true;
-                rebindingCooldown = 0.2f;
+        // Main Scene: Check for game over (all waves cleared)
+        if (currentState == MenuState.None && coverTransitionManager != null)
+        {
+            if (coverTransitionManager.CurrentIndex >= coverTransitionManager.SplineStops.Count)
+            {
+                ShowGameOverScreen();
             }
         }
     }
 
     void OnGUI()
     {
-        GUI.skin = guiSkin;
-        windowRect = GUI.Window(0, windowRect, DrawMenuWindow, "");
-
-        GUI.color = crosshairColor;
-        GUI.DrawTexture(crosshairRect, crosshairTexture);
-        GUI.color = Color.white;
+        if (currentState != MenuState.None)
+        {
+            GUI.skin = guiSkin;
+            windowRect = GUI.Window(0, windowRect, DrawMenuWindow, "");
+        }
     }
 
     void DrawMenuWindow(int windowID)
     {
-        GUILayout.BeginArea(new Rect(40, 50, 720, 600));
+        GUILayout.BeginArea(new Rect(40, 50, 920, 900));
 
         switch (currentState)
         {
-            case MenuState.MainMenu:
-                DrawMainMenu();
+            case MenuState.GameOver:
+                DrawGameOverMenu();
                 break;
-            case MenuState.StageSelection:
-                DrawStageSelection();
+            case MenuState.Pause:
+                DrawPauseMenu();
                 break;
             case MenuState.Options:
-                DrawOptions();
+                DrawOptionsMenu();
                 break;
             case MenuState.SoundSettings:
                 DrawSoundSettings();
@@ -221,112 +184,147 @@ public class MainMenu : MonoBehaviour
             case MenuState.ControlsSettings:
                 DrawControlsSettings();
                 break;
+            case MenuState.Leaderboard:
+                DrawLeaderboard();
+                break;
         }
 
         GUILayout.EndArea();
     }
 
-    void DrawMainMenu()
+    void DrawPauseMenu()
     {
         GUILayout.Space(20);
 
         GUIStyle titleStyle = new GUIStyle(GUI.skin.label);
         titleStyle.fontSize = 56;
         titleStyle.alignment = TextAnchor.MiddleCenter;
-        GUILayout.Label("Main Menu", titleStyle, GUILayout.Height(80));
+        GUILayout.Label("Paused", titleStyle, GUILayout.Height(80));
 
         GUIStyle buttonStyle = new GUIStyle(GUI.skin.button);
         buttonStyle.fontSize = 28;
 
-        if (GUILayout.Button("Play", buttonStyle, GUILayout.Height(90)))
+        if (GUILayout.Button("Resume", buttonStyle, GUILayout.Height(90)))
         {
-            currentState = MenuState.StageSelection;
+            Time.timeScale = 1f;
+            currentState = MenuState.None;
+        }
+
+        if (GUILayout.Button("Main Menu", buttonStyle, GUILayout.Height(90)))
+        {
+            Time.timeScale = 1f;
+            SceneManager.LoadScene("MainMenu");
+        }
+
+        if (GUILayout.Button("Restart", buttonStyle, GUILayout.Height(90)))
+        {
+            if (crosshairController != null)
+            {
+                crosshairController.ResetStats();
+            }
+            Time.timeScale = 1f;
+            SceneManager.LoadScene("MainLevel");
         }
 
         if (GUILayout.Button("Options", buttonStyle, GUILayout.Height(90)))
         {
             currentState = MenuState.Options;
         }
-
-        if (GUILayout.Button("Quit", buttonStyle, GUILayout.Height(90)))
-        {
-            Application.Quit();
-#if UNITY_EDITOR
-            UnityEditor.EditorApplication.isPlaying = false;
-#endif
-        }
-
-        GUILayout.Space(40);
-
-        GUIStyle labelStyle = new GUIStyle(GUI.skin.label);
-        labelStyle.fontSize = 42;
-        labelStyle.alignment = TextAnchor.MiddleCenter;
-        GUILayout.Label("Crosshair Color:", labelStyle, GUILayout.Height(50));
-
-        GUILayout.Space(20);
-
-        if (GUILayout.Button("Color: " + crosshairColors[selectedColorIndex], buttonStyle, GUILayout.Height(60)))
-        {
-            selectedColorIndex = (selectedColorIndex + 1) % crosshairColors.Length;
-            PlayerPrefs.SetInt("CrosshairColorIndex", selectedColorIndex);
-            PlayerPrefs.Save();
-            UpdateCrosshairColor();
-        }
     }
 
-    void DrawStageSelection()
+    void DrawGameOverMenu()
     {
-        GUIStyle backButtonStyle = new GUIStyle(GUI.skin.button);
-        backButtonStyle.fontSize = 24;
-        if (GUI.Button(new Rect(10, 10, 100, 40), "Back", backButtonStyle))
-        {
-            currentState = MenuState.MainMenu;
-        }
-
         GUILayout.Space(20);
 
         GUIStyle titleStyle = new GUIStyle(GUI.skin.label);
         titleStyle.fontSize = 56;
         titleStyle.alignment = TextAnchor.MiddleCenter;
-        GUILayout.Label("Stage Selection", titleStyle, GUILayout.Height(80));
+        GUILayout.Label("Game Over", titleStyle, GUILayout.Height(80));
+
+        GUIStyle labelStyle = new GUIStyle(GUI.skin.label);
+        labelStyle.fontSize = 48;
+        labelStyle.alignment = TextAnchor.MiddleCenter;
+
+        GUIStyle textFieldStyle = new GUIStyle(GUI.skin.textField);
+        textFieldStyle.fontSize = 48;
+        textFieldStyle.alignment = TextAnchor.MiddleCenter;
+        textFieldStyle.padding = new RectOffset(10, 10, 10, 10);
 
         GUIStyle buttonStyle = new GUIStyle(GUI.skin.button);
-        buttonStyle.fontSize = 28;
+        buttonStyle.fontSize = 36;
 
-        if (GUILayout.Button("Shootout", buttonStyle, GUILayout.Height(90)))
+        if (!nameSubmitted)
         {
-            PlayerPrefs.SetString("SelectedStage", "Shootout");
-            PlayerPrefs.Save();
-            SceneManager.LoadScene("ShootingRange");
+            GUILayout.Space(60);
+            GUILayout.BeginHorizontal();
+            GUILayout.FlexibleSpace();
+            GUILayout.Label("Enter Your Name:", labelStyle, GUILayout.Height(70));
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+
+            GUILayout.Space(30);
+            GUILayout.BeginHorizontal();
+            GUILayout.FlexibleSpace();
+            currentPlayerName = GUILayout.TextField(currentPlayerName, 10, textFieldStyle, GUILayout.Height(90), GUILayout.Width(400));
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+
+            GUILayout.Space(60);
+            GUILayout.BeginHorizontal();
+            GUILayout.FlexibleSpace();
+            if (GUILayout.Button("Submit", buttonStyle, GUILayout.Height(90), GUILayout.Width(300)))
+            {
+                nameSubmitted = true;
+                UpdateLeaderboard();
+            }
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
         }
-
-        if (GUILayout.Button("Story", buttonStyle, GUILayout.Height(90)))
+        else
         {
-            PlayerPrefs.SetString("SelectedStage", "Story");
-            PlayerPrefs.Save();
-            SceneManager.LoadScene("MainLevel");
-        }
+            GUILayout.Space(20);
+            if (GUILayout.Button("Main Menu", buttonStyle, GUILayout.Height(90)))
+            {
+                nameSubmitted = false;
+                Time.timeScale = 1f;
+                SceneManager.LoadScene("MainMenu");
+            }
 
-        if (GUILayout.Button("Infinite", buttonStyle, GUILayout.Height(90)))
-        {
-            PlayerPrefs.SetString("SelectedStage", "Infinite");
-            PlayerPrefs.Save();
-            SceneManager.LoadScene("Game");
-        }
+            if (GUILayout.Button("Restart", buttonStyle, GUILayout.Height(90)))
+            {
+                if (crosshairController != null)
+                {
+                    crosshairController.ResetStats();
+                }
+                nameSubmitted = false;
+                Time.timeScale = 1f;
+                SceneManager.LoadScene("MainLevel");
+            }
 
-        if (GUILayout.Button("Add Modifiers", buttonStyle, GUILayout.Height(90)))
-        {
+            if (GUILayout.Button("Options", buttonStyle, GUILayout.Height(90)))
+            {
+                currentState = MenuState.Options;
+            }
+
+            if (GUILayout.Button("Leaderboard", buttonStyle, GUILayout.Height(90)))
+            {
+                currentState = MenuState.Leaderboard;
+            }
         }
     }
 
-    void DrawOptions()
+    void DrawOptionsMenu()
     {
         GUIStyle backButtonStyle = new GUIStyle(GUI.skin.button);
-        backButtonStyle.fontSize = 24;
-        if (GUI.Button(new Rect(10, 10, 100, 40), "Back", backButtonStyle))
+        backButtonStyle.fontSize = 36;
+        GUILayout.BeginHorizontal();
+        GUILayout.FlexibleSpace();
+        if (GUILayout.Button("Back", backButtonStyle, GUILayout.Width(300), GUILayout.Height(90)))
         {
-            currentState = MenuState.MainMenu;
+            currentState = MenuState.Pause;
         }
+        GUILayout.FlexibleSpace();
+        GUILayout.EndHorizontal();
 
         GUILayout.Space(20);
 
@@ -391,10 +389,6 @@ public class MainMenu : MonoBehaviour
         GUILayout.EndHorizontal();
         GUILayout.FlexibleSpace();
         GUILayout.EndHorizontal();
-        if (audioMixer != null)
-        {
-            audioMixer.SetFloat("MasterVolume", Mathf.Log10(masterVolume) * 20);
-        }
 
         GUILayout.Space(20);
 
@@ -407,10 +401,6 @@ public class MainMenu : MonoBehaviour
         GUILayout.EndHorizontal();
         GUILayout.FlexibleSpace();
         GUILayout.EndHorizontal();
-        if (audioMixer != null)
-        {
-            audioMixer.SetFloat("MusicVolume", Mathf.Log10(musicVolume) * 20);
-        }
 
         GUILayout.Space(20);
 
@@ -423,10 +413,6 @@ public class MainMenu : MonoBehaviour
         GUILayout.EndHorizontal();
         GUILayout.FlexibleSpace();
         GUILayout.EndHorizontal();
-        if (audioMixer != null)
-        {
-            audioMixer.SetFloat("SFXVolume", Mathf.Log10(sfxVolume) * 20);
-        }
 
         GUILayout.Space(40);
 
@@ -465,7 +451,7 @@ public class MainMenu : MonoBehaviour
         GUILayout.Space(20);
 
         string shootLabel = isRebindingShoot ? "Press a key..." : $"Shoot: {shootKey}";
-        if (!isRebindingLocked && GUILayout.Button(shootLabel, buttonStyle, GUILayout.Height(50)))
+        if (GUILayout.Button(shootLabel, buttonStyle, GUILayout.Height(50)))
         {
             isRebindingShoot = true;
             isRebindingCover = false;
@@ -475,7 +461,7 @@ public class MainMenu : MonoBehaviour
         GUILayout.Space(20);
 
         string coverLabel = isRebindingCover ? "Press a key..." : $"Cover: {coverKey}";
-        if (!isRebindingLocked && GUILayout.Button(coverLabel, buttonStyle, GUILayout.Height(50)))
+        if (GUILayout.Button(coverLabel, buttonStyle, GUILayout.Height(50)))
         {
             isRebindingShoot = false;
             isRebindingCover = true;
@@ -485,7 +471,7 @@ public class MainMenu : MonoBehaviour
         GUILayout.Space(20);
 
         string pauseLabel = isRebindingPause ? "Press a key..." : $"Pause: {pauseKey}";
-        if (!isRebindingLocked && GUILayout.Button(pauseLabel, buttonStyle, GUILayout.Height(50)))
+        if (GUILayout.Button(pauseLabel, buttonStyle, GUILayout.Height(50)))
         {
             isRebindingShoot = false;
             isRebindingCover = false;
@@ -506,14 +492,85 @@ public class MainMenu : MonoBehaviour
         }
     }
 
-    void UpdateCrosshairColor()
+    void DrawLeaderboard()
     {
-        crosshairColor = selectedColorIndex switch
+        GUIStyle backButtonStyle = new GUIStyle(GUI.skin.button);
+        backButtonStyle.fontSize = 36;
+        GUILayout.BeginHorizontal();
+        GUILayout.FlexibleSpace();
+        if (GUILayout.Button("Back", backButtonStyle, GUILayout.Width(300), GUILayout.Height(90)))
         {
-            0 => Color.red,
-            1 => Color.green,
-            2 => Color.blue,
-            _ => Color.red
-        };
+            currentState = MenuState.GameOver;
+        }
+        GUILayout.FlexibleSpace();
+        GUILayout.EndHorizontal();
+
+        GUILayout.Space(40);
+
+        GUIStyle titleStyle = new GUIStyle(GUI.skin.label);
+        titleStyle.fontSize = 64;
+        titleStyle.alignment = TextAnchor.MiddleCenter;
+        GUILayout.Label("Leaderboard", titleStyle, GUILayout.Height(100));
+
+        GUIStyle entryStyle = new GUIStyle(GUI.skin.label);
+        entryStyle.fontSize = 36;
+        entryStyle.alignment = TextAnchor.MiddleCenter;
+
+        GUILayout.Space(40);
+
+        for (int i = 0; i < 5; i++)
+        {
+            string rank = (i + 1) + ". ";
+            string nameEntry = playerNames[i] != "-" ? playerNames[i] : "-";
+            string scoreEntry = highScores[i] > 0 ? highScores[i].ToString() : "-";
+            string accuracyEntry = highAccuracies[i] > 0 ? highAccuracies[i].ToString("F1") + "%" : "-";
+            GUILayout.Label($"{rank} {nameEntry} | Score: {scoreEntry} | Accuracy: {accuracyEntry}", entryStyle, GUILayout.Height(70));
+        }
+    }
+
+    void UpdateLeaderboard()
+    {
+        if (crosshairController != null)
+        {
+            int currentScore = crosshairController.GetScore();
+            float currentAccuracy = crosshairController.GetAccuracy();
+
+            for (int i = 0; i < 5; i++)
+            {
+                if (currentScore > highScores[i])
+                {
+                    for (int j = 4; j > i; j--)
+                    {
+                        highScores[j] = highScores[j - 1];
+                        highAccuracies[j] = highAccuracies[j - 1];
+                        playerNames[j] = playerNames[j - 1];
+                    }
+                    highScores[i] = currentScore;
+                    highAccuracies[i] = currentAccuracy;
+                    playerNames[i] = currentPlayerName;
+                    break;
+                }
+            }
+
+            for (int i = 0; i < 5; i++)
+            {
+                PlayerPrefs.SetInt("HighScore" + i, highScores[i]);
+                PlayerPrefs.SetFloat("HighAccuracy" + i, highAccuracies[i]);
+                PlayerPrefs.SetString("PlayerName" + i, playerNames[i]);
+            }
+            PlayerPrefs.Save();
+        }
+    }
+
+    public void ShowGameOverScreen()
+    {
+        Time.timeScale = 0f;
+        currentState = MenuState.GameOver;
+    }
+
+    public void ShowPauseMenu()
+    {
+        Time.timeScale = 0f;
+        currentState = MenuState.Pause;
     }
 }
