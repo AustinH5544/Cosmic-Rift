@@ -26,6 +26,11 @@ public class EnemyWaveManager : MonoBehaviour
             Destroy(oldTarget);
         }
 
+        foreach (var oldSpawner in GameObject.FindGameObjectsWithTag("Spawner"))
+        {
+            Destroy(oldSpawner);
+        }
+
         if (index < 0 || index >= enemyPrefabs.Count || index >= spawnPoints.Count)
         {
             Debug.LogWarning("Invalid index for enemy prefab or spawn point: " + index);
@@ -46,7 +51,7 @@ public class EnemyWaveManager : MonoBehaviour
 
         foreach (Transform child in wave.transform)
         {
-            if (child.CompareTag("Target"))
+            if (child.CompareTag("Target") || child.CompareTag("Spawner"))
             {
                 Transform spawnPoint = spawnLocations[spawnIndex % spawnLocations.Count];
                 child.position = spawnPoint.position;
