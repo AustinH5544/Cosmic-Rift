@@ -24,6 +24,8 @@ public class CrosshairControllerMain : MonoBehaviour
 
     private AudioSource audioSource;
 
+    public LayerMask shootableLayers;
+
     void Start()
     {
         int colorIndex = PlayerPrefs.GetInt("CrosshairColorIndex", 0);
@@ -104,7 +106,7 @@ public class CrosshairControllerMain : MonoBehaviour
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         RaycastHit hit;
 
-        if (Physics.Raycast(ray, out hit))
+        if (Physics.Raycast(ray, out hit, Mathf.Infinity, shootableLayers))
         {
             if (hit.collider.CompareTag("Target"))
             {

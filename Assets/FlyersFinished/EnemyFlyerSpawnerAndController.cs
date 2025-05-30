@@ -31,7 +31,7 @@ public class EnemySpawnerAndController : MonoBehaviour
     // Gizmos are commented out in OnDrawGizmos, so this variable is no longer explicitly used for drawing.
     // However, it's kept as a public variable as it might be useful for future debugging or re-enabling Gizmos.
     // [Header("Gizmo Settings")]
-    // public Color attackDirectionGizmoColor = Color.magenta; 
+    // public Color attackDirectionGizmoColor = Color.magenta;
 
     [Header("Obstacle Avoidance")]
     public LayerMask obstacleLayer; // Assign the layer(s) your obstacles are on (e.g., "Default", "Environment")
@@ -53,7 +53,6 @@ public class EnemySpawnerAndController : MonoBehaviour
     private float lastAttackTime;
     private Dictionary<GameObject, Vector3> enemyCurrentTargets = new Dictionary<GameObject, Vector3>();
     private HashSet<GameObject> funnelCompletedEnemies = new HashSet<GameObject>();
-
 
     void Start()
     {
@@ -414,7 +413,6 @@ public class EnemySpawnerAndController : MonoBehaviour
         Destroy(this.gameObject); // Destroy the GameObject this script is attached to
     }
 
-
     /// <summary>
     /// Draws Gizmos in the editor for visualization of flight area and funnel points.
     /// Gizmos for individual enemy flight paths and attack directions are commented out.
@@ -453,13 +451,12 @@ public class EnemySpawnerAndController : MonoBehaviour
             Gizmos.DrawSphere(funnelTargetPoint.position, 0.5f); // Draw a sphere for the target point
         }
 
-
         // --- Commented out Gizmos for individual enemy behavior ---
         /*
-        foreach (GameObject enemy in spawnedEnemies) 
+        foreach (GameObject enemy in spawnedEnemies)
         {
             if (enemy == null || player == null) continue;
-            
+
             // If an enemy's flight coroutine is not active, it's either attacking or paused before returning.
             // Gizmo for attacking enemies.
             if (!enemyFlightCoroutines.ContainsKey(enemy))
