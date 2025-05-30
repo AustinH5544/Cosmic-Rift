@@ -108,11 +108,28 @@ public class CrosshairControllerMain : MonoBehaviour
 
         if (Physics.Raycast(ray, out hit, Mathf.Infinity, shootableLayers))
         {
+            // Check if the hit object has the "Target" tag
             if (hit.collider.CompareTag("Target"))
             {
-                shotsHit++;
-                score += 10;
-                Destroy(hit.collider.gameObject);
+                // Try to get the FlyerEnemy component from the hit object
+                FlyerEnemy enemy = hit.collider.GetComponent<FlyerEnemy>();
+
+                // If a FlyerEnemy component is found, apply damage
+                if (enemy != null)
+                {
+                    shotsHit++; // Increment shots hit only if it's a valid enemy
+                    score += 10; // Add score for hitting an enemy
+
+                    // Define the damage amount (e.g., 20 damage per shot)
+                    int damageToDeal = 20;
+                    enemy.TakeDamage(damageToDeal);
+                }
+                else
+                {
+                    shotsHit++; // Increment shots hit only if it's a valid enemy
+                    score += 10;
+                    Destroy(hit.collider.gameObject);
+                }
             }
         }
 
