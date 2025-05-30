@@ -1,9 +1,14 @@
 using UnityEngine;
-using System.Collections; // Required for IEnumerator
-using System.Collections.Generic; // Required for List and Dictionary
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Diagnostics;
 
 public class EnemySpawnerAndController : MonoBehaviour
 {
+    // Declare the static event here
+    public static event Action OnAnyEnemyDeath;
+
     public GameObject enemyPrefab; // Assign your main enemy prefab in the Inspector
     public BoxCollider flightAreaCollider; // Assign the Box Collider that defines the flight and spawn area
 
@@ -17,10 +22,9 @@ public class EnemySpawnerAndController : MonoBehaviour
 
     public float attackSpeedMultiplier = 2f; // Speed multiplier when an enemy attacks
     public float attackCooldown = 5f; // Time between attacks
-    
-    // Changed from public to private, as it will be auto-assigned
-    private GameObject player; 
-    
+
+    public GameObject player; // Auto-assign the Main Camera as the player
+
     public float attackReturnDelay = 1f; // Delay before enemy returns to pattern after attack
 
     [Header("Attack Behavior")]
@@ -31,16 +35,14 @@ public class EnemySpawnerAndController : MonoBehaviour
     public Color attackGlowColor = Color.red; // Color for the attacking enemy's glow
     public float glowIntensity = 2.0f; // Intensity of the glow (e.g., 1.0 to 5.0, directly scales EmissionColor)
 
-    // Gizmos are commented out in OnDrawGizmos, so this variable is no longer explicitly used for drawing.
-    // However, it's kept as a public variable as it might be useful for future debugging or re-enabling Gizmos.
-    // [Header("Gizmo Settings")]
-    // public Color attackDirectionGizmoColor = Color.magenta;
+    [Header("Gizmo Settings")]
+    public Color attackDirectionGizmoColor = Color.magenta;
 
     [Header("Obstacle Avoidance")]
     public LayerMask obstacleLayer; // Assign the layer(s) your obstacles are on (e.g., "Default", "Environment")
     public float avoidanceRayLength = 2f; // How far ahead to cast a ray for obstacles
     public float avoidanceSphereRadius = 0.5f; // Radius of the sphere for obstacle detection
-    public float avoidanceForce = 5f;          // How strongly to turn away from detected obstacles
+    public float avoidanceForce = 5f;           // How strongly to turn away from detected obstacles
     public float rotationSpeed = 5f;            // How fast the enemy rotates to face its movement direction
 
     [Header("Funnel Spawn Settings")]
@@ -62,22 +64,22 @@ public class EnemySpawnerAndController : MonoBehaviour
         // --- Validation Checks ---
         if (enemyPrefab == null)
         {
-            Debug.LogError("Enemy Prefab is not assigned! Please assign an enemy prefab in the Inspector.");
+            UnityEngine.Debug.LogError("Enemy Prefab is not assigned! Please assign an enemy prefab in the Inspector.");
             return;
         }
         if (flightAreaCollider == null)
         {
-            Debug.LogError("Flight Area Collider is not assigned! Please assign a Box Collider in the Inspector.");
+            UnityEngine.Debug.LogError("Flight Area Collider is not assigned! Please assign a Box Collider in the Inspector.");
             return;
         }
         if (funnelSpawnPoint == null)
         {
-            Debug.LogError("Funnel Spawn Point is not assigned! Please assign a Transform in the Inspector.");
+            UnityEngine.Debug.LogError("Funnel Spawn Point is not assigned! Please assign a Transform in the Inspector.");
             return;
         }
         if (funnelTargetPoint == null)
         {
-            Debug.LogError("Funnel Target Point is not assigned! Please assign a Transform in the Inspector.");
+            UnityEngine.Debug.LogError("Funnel Target Point is not assigned! Please assign a Transform in the Inspector.");
             return;
         }
 
@@ -85,11 +87,11 @@ public class EnemySpawnerAndController : MonoBehaviour
         if (Camera.main != null)
         {
             player = Camera.main.gameObject;
-            Debug.Log("Player automatically assigned to Main Camera.");
+            UnityEngine.Debug.Log("Player automatically assigned to Main Camera.");
         }
         else
         {
-            Debug.LogError("No Main Camera found! Please ensure your main camera is tagged 'MainCamera' in the Inspector.");
+            UnityEngine.Debug.LogError("No Main Camera found! Please ensure your main camera is tagged 'MainCamera' in the Inspector.");
             return;
         }
 
@@ -147,9 +149,9 @@ public class EnemySpawnerAndController : MonoBehaviour
         float minFlightY = bounds.min.y + (bounds.size.y * minFlightHeightRatio);
         float maxFlightY = bounds.min.y + (bounds.size.y * maxFlightHeightRatio);
 
-        float randomX = Random.Range(bounds.min.x, bounds.max.x);
-        float randomY = Random.Range(minFlightY, maxFlightY);
-        float randomZ = Random.Range(bounds.min.z, bounds.max.z);
+        float randomX = UnityEngine.Random.Range(bounds.min.x, bounds.max.x);
+        float randomY = UnityEngine.Random.Range(minFlightY, maxFlightY);
+        float randomZ = UnityEngine.Random.Range(bounds.min.z, bounds.max.z);
 
         return new Vector3(randomX, randomY, randomZ);
     }
@@ -184,7 +186,7 @@ public class EnemySpawnerAndController : MonoBehaviour
                 if (Vector3.Distance(targetPosition, funnelTargetPoint.position) < 0.1f && !funnelCompletedEnemies.Contains(enemy))
                 {
                     funnelCompletedEnemies.Add(enemy);
-                    Debug.Log($"Enemy {enemy.name} completed funneling and is now ready to attack.");
+                    UnityEngine.Debug.Log($"Enemy {enemy.name} completed funneling and is now ready to attack.");
                 }
 
                 targetPosition = GetRandomPositionInColliderBounds(); // Get a new random target
@@ -256,7 +258,7 @@ public class EnemySpawnerAndController : MonoBehaviour
         if (funnelCompletedEnemies.Count == 0) yield break;
         if (player == null) // CRITICAL FIX: Ensure player exists before attempting to attack
         {
-            Debug.LogWarning("Player GameObject is null. Cannot initiate attack.");
+            UnityEngine.Debug.LogWarning("Player GameObject is null. Cannot initiate attack.");
             yield break;
         }
 
@@ -264,7 +266,7 @@ public class EnemySpawnerAndController : MonoBehaviour
         List<GameObject> eligibleAttackers = new List<GameObject>(funnelCompletedEnemies);
         if (eligibleAttackers.Count == 0) yield break; // No eligible attackers
 
-        GameObject attackingEnemy = eligibleAttackers[Random.Range(0, eligibleAttackers.Count)];
+        GameObject attackingEnemy = eligibleAttackers[UnityEngine.Random.Range(0, eligibleAttackers.Count)];
 
         // Ensure the selected enemy hasn't died while waiting for its turn
         if (attackingEnemy == null || !attackingEnemy.activeInHierarchy) yield break;
@@ -379,7 +381,7 @@ public class EnemySpawnerAndController : MonoBehaviour
         }
         else
         {
-            Debug.LogWarning($"Enemy {enemy.name} has no Renderer component to apply glow to.");
+            UnityEngine.Debug.LogWarning($"Enemy {enemy.name} has no Renderer component to apply glow to.");
         }
     }
 
@@ -390,7 +392,7 @@ public class EnemySpawnerAndController : MonoBehaviour
     /// <param name="deadEnemy">The GameObject of the defeated enemy.</param>
     public void NotifyEnemyDeath(GameObject deadEnemy)
     {
-        Debug.Log($"Spawner received death notification for {deadEnemy.name}. Stopping flight and cleaning up.");
+        UnityEngine.Debug.Log($"Spawner received death notification for {deadEnemy.name}. Stopping flight and cleaning up.");
 
         // Ensure glow is off before destroying (good practice for pooled objects too)
         SetEnemyGlow(deadEnemy, false); // Turn off glow on death
@@ -411,10 +413,13 @@ public class EnemySpawnerAndController : MonoBehaviour
         // Remove from current targets dictionary
         enemyCurrentTargets.Remove(deadEnemy);
 
+        // --- INVOKE THE EVENT HERE ---
+        OnAnyEnemyDeath?.Invoke();
+
         // Check if all enemies are defeated and destroy the spawner if so.
         if (spawnedEnemies.Count == 0)
         {
-            Debug.Log("All enemies defeated! Starting spawner destruction countdown.");
+            UnityEngine.Debug.Log("All enemies defeated! Starting spawner destruction countdown.");
             StartCoroutine(DestroySpawnerAfterDelay());
         }
     }
@@ -425,13 +430,12 @@ public class EnemySpawnerAndController : MonoBehaviour
     IEnumerator DestroySpawnerAfterDelay()
     {
         yield return new WaitForSeconds(spawnerDestroyDelay);
-        Debug.Log("Destroying spawner.");
+        UnityEngine.Debug.Log("Destroying spawner.");
         Destroy(this.gameObject); // Destroy the GameObject this script is attached to
     }
 
     /// <summary>
     /// Draws Gizmos in the editor for visualization of flight area and funnel points.
-    /// Gizmos for individual enemy flight paths and attack directions are commented out.
     /// </summary>
     void OnDrawGizmos()
     {
@@ -467,8 +471,7 @@ public class EnemySpawnerAndController : MonoBehaviour
             Gizmos.DrawSphere(funnelTargetPoint.position, 0.5f); // Draw a sphere for the target point
         }
 
-        // --- Commented out Gizmos for individual enemy behavior ---
-        /*
+        // Draw Gizmos for individual enemy behavior.
         foreach (GameObject enemy in spawnedEnemies)
         {
             if (enemy == null || player == null) continue;
@@ -496,6 +499,5 @@ public class EnemySpawnerAndController : MonoBehaviour
                 Gizmos.DrawSphere(enemyCurrentTargets[enemy], 0.2f);
             }
         }
-        */
     }
 }
