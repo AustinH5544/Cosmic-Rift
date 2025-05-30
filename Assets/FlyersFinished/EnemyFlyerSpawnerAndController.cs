@@ -17,7 +17,10 @@ public class EnemySpawnerAndController : MonoBehaviour
 
     public float attackSpeedMultiplier = 2f; // Speed multiplier when an enemy attacks
     public float attackCooldown = 5f; // Time between attacks
-    public GameObject player; // Assign the Player GameObject in the Inspector
+    
+    // Changed from public to private, as it will be auto-assigned
+    private GameObject player; 
+    
     public float attackReturnDelay = 1f; // Delay before enemy returns to pattern after attack
 
     [Header("Attack Behavior")]
@@ -38,7 +41,7 @@ public class EnemySpawnerAndController : MonoBehaviour
     public float avoidanceRayLength = 2f; // How far ahead to cast a ray for obstacles
     public float avoidanceSphereRadius = 0.5f; // Radius of the sphere for obstacle detection
     public float avoidanceForce = 5f;          // How strongly to turn away from detected obstacles
-    public float rotationSpeed = 5f;           // How fast the enemy rotates to face its movement direction
+    public float rotationSpeed = 5f;            // How fast the enemy rotates to face its movement direction
 
     [Header("Funnel Spawn Settings")]
     public Transform funnelSpawnPoint; // The starting point for enemies to spawn
@@ -67,11 +70,6 @@ public class EnemySpawnerAndController : MonoBehaviour
             Debug.LogError("Flight Area Collider is not assigned! Please assign a Box Collider in the Inspector.");
             return;
         }
-        if (player == null)
-        {
-            Debug.LogError("Player GameObject is not assigned! Please assign the Player GameObject in the Inspector.");
-            return;
-        }
         if (funnelSpawnPoint == null)
         {
             Debug.LogError("Funnel Spawn Point is not assigned! Please assign a Transform in the Inspector.");
@@ -80,6 +78,18 @@ public class EnemySpawnerAndController : MonoBehaviour
         if (funnelTargetPoint == null)
         {
             Debug.LogError("Funnel Target Point is not assigned! Please assign a Transform in the Inspector.");
+            return;
+        }
+
+        // Auto-assign the Main Camera as the player
+        if (Camera.main != null)
+        {
+            player = Camera.main.gameObject;
+            Debug.Log("Player automatically assigned to Main Camera.");
+        }
+        else
+        {
+            Debug.LogError("No Main Camera found! Please ensure your main camera is tagged 'MainCamera' in the Inspector.");
             return;
         }
 
@@ -242,11 +252,18 @@ public class EnemySpawnerAndController : MonoBehaviour
     /// </summary>
     IEnumerator AttackPlayer()
     {
-        // Only proceed if there are enemies ready to attack.
+        // Ensure there are enemies ready to attack and that the player exists.
         if (funnelCompletedEnemies.Count == 0) yield break;
+        if (player == null) // CRITICAL FIX: Ensure player exists before attempting to attack
+        {
+            Debug.LogWarning("Player GameObject is null. Cannot initiate attack.");
+            yield break;
+        }
 
         // Select a random enemy ONLY from those that have completed funneling.
         List<GameObject> eligibleAttackers = new List<GameObject>(funnelCompletedEnemies);
+        if (eligibleAttackers.Count == 0) yield break; // No eligible attackers
+
         GameObject attackingEnemy = eligibleAttackers[Random.Range(0, eligibleAttackers.Count)];
 
         // Ensure the selected enemy hasn't died while waiting for its turn
@@ -254,11 +271,6 @@ public class EnemySpawnerAndController : MonoBehaviour
 
         // Temporarily remove the attacking enemy from the ready list so it's not picked again immediately.
         funnelCompletedEnemies.Remove(attackingEnemy);
-
-        // Set the attacking enemy's initial target for the attack phase to the player's position.
-        // This captures the player's position when the attack starts.
-        Vector3 attackTarget = player.transform.position;
-        enemyCurrentTargets[attackingEnemy] = attackTarget; // Store this for Gizmos if needed
 
         // Stop the current flight coroutine for the attacking enemy.
         if (enemyFlightCoroutines.ContainsKey(attackingEnemy) && enemyFlightCoroutines[attackingEnemy] != null)
@@ -273,35 +285,39 @@ public class EnemySpawnerAndController : MonoBehaviour
         float currentEnemyAttackSpeed = originalFlySpeed;
 
         // --- Attack Phase ---
-        // Continue attacking until the enemy is within attackSuccessDistance of the attack target.
-        while (attackingEnemy != null && attackingEnemy.activeInHierarchy && Vector3.Distance(attackingEnemy.transform.position, attackTarget) > attackSuccessDistance)
+        // CRITICAL FIX: The while loop condition now checks the distance to the PLAYER'S CURRENT POSITION
+        // every frame. This makes the enemy chase the moving player.
+        while (attackingEnemy != null && attackingEnemy.activeInHierarchy && player != null && Vector3.Distance(attackingEnemy.transform.position, player.transform.position) > attackSuccessDistance)
         {
             // Smoothly increase the enemy's speed towards the attack speed multiplier.
             currentEnemyAttackSpeed = Mathf.Lerp(currentEnemyAttackSpeed, originalFlySpeed * attackSpeedMultiplier, Time.deltaTime * 5f);
 
-            // Movement is directly towards the stored attackTarget.
-            Vector3 moveDirection = (attackTarget - attackingEnemy.transform.position).normalized;
+            // CRITICAL FIX: The moveDirection is now calculated directly from the PLAYER'S CURRENT POSITION each frame.
+            Vector3 moveDirection = (player.transform.position - attackingEnemy.transform.position).normalized;
 
-            // Rotation includes the attackRotationOffset.
-            if (player != null) // Keep rotation oriented towards the live player if available
+            // Rotation also correctly points towards the live player.
+            // This part was already dynamic and works well with the current player position.
+            Vector3 directionToPlayerRaw = (player.transform.position - attackingEnemy.transform.position).normalized;
+            if (directionToPlayerRaw != Vector3.zero)
             {
-                Vector3 directionToPlayerRaw = (player.transform.position - attackingEnemy.transform.position).normalized;
-                if (directionToPlayerRaw != Vector3.zero)
-                {
-                    Quaternion targetRotation = Quaternion.LookRotation(directionToPlayerRaw);
-                    targetRotation *= Quaternion.Euler(0, attackRotationOffset, 0);
-                    attackingEnemy.transform.rotation = Quaternion.Slerp(attackingEnemy.transform.rotation, targetRotation, Time.deltaTime * rotationSpeed * attackSpeedMultiplier);
-                }
+                Quaternion targetRotation = Quaternion.LookRotation(directionToPlayerRaw);
+                targetRotation *= Quaternion.Euler(0, attackRotationOffset, 0);
+                attackingEnemy.transform.rotation = Quaternion.Slerp(attackingEnemy.transform.rotation, targetRotation, Time.deltaTime * rotationSpeed * attackSpeedMultiplier);
             }
 
-            // Move the attacking enemy towards the attack target.
+            // Move the attacking enemy towards the player's live position.
+            // Ensure you are adding the moveDirection to the current position to move *in* that direction.
             attackingEnemy.transform.position = Vector3.MoveTowards(attackingEnemy.transform.position, attackingEnemy.transform.position + moveDirection, currentEnemyAttackSpeed * Time.deltaTime);
+
+            // Update the stored target for Gizmos. This doesn't affect movement, but helps visualize the intended target.
+            // This line is for debugging visualization purposes.
+            enemyCurrentTargets[attackingEnemy] = player.transform.position;
 
             yield return null; // Wait for the next frame.
         }
 
         // --- Post-Attack Phase ---
-        // Check if the enemy is still valid.
+        // Check if the enemy is still valid after the attack phase (e.g., wasn't destroyed by player).
         if (attackingEnemy == null || !attackingEnemy.activeInHierarchy)
         {
             SetEnemyGlow(attackingEnemy, false); // Ensure glow is off if enemy was destroyed mid-attack
