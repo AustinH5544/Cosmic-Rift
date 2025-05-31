@@ -192,7 +192,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: ac544e9997d7525458424cea4e28ea7e, type: 2}
+  - {fileID: 2100000, guid: e3ff50e549e13d640b59d605096f6dcf, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -1142,7 +1142,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: ac544e9997d7525458424cea4e28ea7e, type: 2}
+  - {fileID: 2100000, guid: e3ff50e549e13d640b59d605096f6dcf, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -1531,9 +1531,11 @@ GameObject:
   - component: {fileID: 4900972289239706577}
   - component: {fileID: 604944368120564950}
   - component: {fileID: 4677127525412762011}
+  - component: {fileID: 8987633178320062214}
+  - component: {fileID: 4627048007066994707}
   m_Layer: 0
   m_Name: SpaceManBugRifle
-  m_TagString: Untagged
+  m_TagString: Target
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1590,7 +1592,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   bulletPrefab: {fileID: 6770343624299816540, guid: c900c976801d20247b89346013d8928f, type: 3}
-  playerTransform: {fileID: 0}
+  playerTransform: {fileID: 5196001700668407209, guid: fb4ecebb642dfb245948a758c0b8ac46, type: 3}
   shootingPoint: {fileID: 27097039945108434}
   fireRate: 3
   bulletSpeed: 10
@@ -1608,6 +1610,41 @@ MonoBehaviour:
   _calculatedMissOffsetMax: 3
   impactGlowDuration: 0.5
   impactGlowColor: {r: 1, g: 0, b: 0, a: 1}
+--- !u!136 &8987633178320062214
+CapsuleCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4646944113990625408}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Radius: 0.56574607
+  m_Height: 2.7852342
+  m_Direction: 1
+  m_Center: {x: 0.17436513, y: 1.214974, z: 0.22360155}
+--- !u!114 &4627048007066994707
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4646944113990625408}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9a298b44aaff67c44a8dcecfb9addce0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &4793441042328756199
 GameObject:
   m_ObjectHideFlags: 0
