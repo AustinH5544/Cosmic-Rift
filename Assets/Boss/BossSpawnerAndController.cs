@@ -279,7 +279,7 @@ public class BossSpawnerAndController : MonoBehaviour
     {
         yield return new WaitForSeconds(spawnerDestroyDelay);
         UnityEngine.Debug.Log("Destroying spawner.");
-        Destroy(transform.parent.gameObject);
+        Destroy(gameObject);
     }
 
     /// <summary>
