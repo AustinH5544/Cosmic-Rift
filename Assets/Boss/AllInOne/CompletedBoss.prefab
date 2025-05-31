@@ -9,6 +9,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4352824425872224299}
+  - component: {fileID: 5647650506311110188}
   m_Layer: 0
   m_Name: CompletedBoss
   m_TagString: Spawner
@@ -33,6 +34,20 @@ Transform:
   - {fileID: 9043943451558772070}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &5647650506311110188
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1913361843513657072}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ab3661ec414aa944bb8830acc654de3b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  child1: {fileID: 5508048321105446670}
+  child2: {fileID: 9117099219520409108}
 --- !u!1001 &1578415567147357042
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -121,6 +136,11 @@ PrefabInstance:
 --- !u!4 &4850148226971330866 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 6244408584430303808, guid: cb532f5c953222949bbdb8fdb558c103, type: 3}
+  m_PrefabInstance: {fileID: 1578415567147357042}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &5508048321105446670 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 6455677362677650556, guid: cb532f5c953222949bbdb8fdb558c103, type: 3}
   m_PrefabInstance: {fileID: 1578415567147357042}
   m_PrefabAsset: {fileID: 0}
 --- !u!1001 &5363282091194501028
