@@ -564,6 +564,10 @@ public class GameManagerMain : MonoBehaviour
 
     public void ShowGameOverScreen()
     {
+        if (crosshairController != null)
+        {
+            crosshairController.ResetStats();
+        }
         Time.timeScale = 0f;
         currentState = MenuState.GameOver;
     }
@@ -572,5 +576,11 @@ public class GameManagerMain : MonoBehaviour
     {
         Time.timeScale = 0f;
         currentState = MenuState.Pause;
+    }
+
+    public void GameOver()
+    {
+        Debug.Log("GameManagerMain: Game Over triggered due to player death.");
+        ShowGameOverScreen();
     }
 }
