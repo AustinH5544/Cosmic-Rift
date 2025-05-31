@@ -15,10 +15,13 @@ public class CoverTransitionManagerMain : MonoBehaviour
     private int currentIndex = 1;
 
     private bool isMoving = false;
+    private bool isInCombat = false;
 
-    public bool IsInCombat { get; private set; } = false;
+    private TimerMain timerScript;
+
+    public bool IsInCombat { get { return isInCombat; } private set { isInCombat = value; } }
     public int CurrentIndex => currentIndex;
-    public List<float> SplineStops => splineStops; // Added public getter
+    public List<float> SplineStops => splineStops;
 
     void Start()
     {
@@ -26,6 +29,12 @@ public class CoverTransitionManagerMain : MonoBehaviour
         {
             Debug.LogError("You need at least 2 spline stops.");
             return;
+        }
+
+        timerScript = FindObjectOfType<TimerMain>();
+        if (timerScript == null)
+        {
+            Debug.LogError("CoverTransitionManagerMain: TimerMain script not found in the scene!");
         }
 
         dolly.CameraPosition = splineStops[0];
@@ -54,6 +63,10 @@ public class CoverTransitionManagerMain : MonoBehaviour
             currentIndex++;
             if (currentIndex < splineStops.Count)
             {
+                if (timerScript != null)
+                {
+                    timerScript.AddTime(10f);
+                }
                 MoveToCover(currentIndex);
             }
             else

@@ -1,11 +1,11 @@
 using UnityEngine;
-using TMPro; // Add for TextMeshProUGUI
+using TMPro;
 
 public class CrosshairControllerMain : MonoBehaviour
 {
     public Texture2D crosshairTexture;
-    public TextMeshProUGUI scoreText; // Changed to TextMeshProUGUI
-    public TextMeshProUGUI ammoText; // Changed to TextMeshProUGUI
+    public TextMeshProUGUI scoreText;
+    public TextMeshProUGUI ammoText;
     public AudioClip shootSound;
     public AudioClip reloadSound;
 
@@ -15,6 +15,7 @@ public class CrosshairControllerMain : MonoBehaviour
 
     private float reloadTime = 2f;
     private bool isReloading = false;
+    private float reloadStartTime;
     private int maxAmmo = 12;
     private int currentAmmo;
 
@@ -25,6 +26,8 @@ public class CrosshairControllerMain : MonoBehaviour
     private AudioSource audioSource;
 
     public LayerMask shootableLayers;
+
+    private GameManagerMain gameManager;
 
     void Start()
     {
@@ -59,6 +62,12 @@ public class CrosshairControllerMain : MonoBehaviour
         audioSource = gameObject.AddComponent<AudioSource>();
         audioSource.volume = PlayerPrefs.GetFloat("SFXVolume", 1f);
 
+        gameManager = FindObjectOfType<GameManagerMain>();
+        if (gameManager == null)
+        {
+            Debug.LogError("CrosshairControllerMain: GameManagerMain not found in the scene!");
+        }
+
         UpdateUI();
     }
 
@@ -71,6 +80,15 @@ public class CrosshairControllerMain : MonoBehaviour
 
         Vector2 mousePosition = Input.mousePosition;
         crosshairRect = new Rect(mousePosition.x - crosshairTexture.width / 2f, Screen.height - mousePosition.y - crosshairTexture.height / 2f, crosshairTexture.width, crosshairTexture.height);
+
+        if (!CanShoot())
+        {
+            if (isReloading && Time.time >= reloadStartTime + reloadTime)
+            {
+                FinishReload();
+            }
+            return;
+        }
 
         if (Input.GetKeyDown(shootKey) && CanShoot())
         {
@@ -91,7 +109,7 @@ public class CrosshairControllerMain : MonoBehaviour
 
     void OnGUI()
     {
-        if (!CanShoot()) return;
+        if (!CanShowCrosshair()) return;
 
         GUI.color = crosshairColor;
         GUI.DrawTexture(crosshairRect, crosshairTexture);
@@ -108,7 +126,6 @@ public class CrosshairControllerMain : MonoBehaviour
 
         if (Physics.Raycast(ray, out hit, Mathf.Infinity, shootableLayers))
         {
-
             if (hit.collider.CompareTag("Target"))
             {
                 FlyerEnemy enemy = hit.collider.GetComponent<FlyerEnemy>();
@@ -146,6 +163,7 @@ public class CrosshairControllerMain : MonoBehaviour
         if (isReloading) return;
 
         isReloading = true;
+        reloadStartTime = Time.time;
         Invoke(nameof(FinishReload), reloadTime);
 
         if (audioSource != null && reloadSound != null)
@@ -172,14 +190,41 @@ public class CrosshairControllerMain : MonoBehaviour
 
     bool CanShoot()
     {
-        var coverManager = Object.FindFirstObjectByType<CoverTransitionManagerMain>();
-        var coverController = Object.FindFirstObjectByType<CoverControllerMain>();
+        if (gameManager != null)
+        {
+            if (gameManager.IsPaused() || gameManager.IsGameOver())
+            {
+                return false;
+            }
+        }
 
+        var coverManager = Object.FindFirstObjectByType<CoverTransitionManagerMain>();
         bool inCombat = coverManager != null && coverManager.IsInCombat;
-        bool notInCover = coverController != null && !coverController.IsInCover();
+
         bool canShootAmmo = currentAmmo > 0 && !isReloading;
 
-        return inCombat && notInCover && canShootAmmo;
+        return inCombat && canShootAmmo;
+    }
+
+    bool CanShowCrosshair()
+    {
+        // Always show the crosshair during pause or game over menus to allow clicking buttons
+        if (gameManager != null)
+        {
+            if (gameManager.IsPaused() || gameManager.IsGameOver())
+            {
+                return true;
+            }
+        }
+
+        // Hide the crosshair while reloading during gameplay
+        if (isReloading)
+        {
+            return false;
+        }
+
+        // Show the crosshair in all other cases (e.g., normal gameplay, out of ammo but not reloading)
+        return true;
     }
 
     private void UpdateUI()

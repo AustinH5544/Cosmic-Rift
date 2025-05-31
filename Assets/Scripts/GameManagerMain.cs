@@ -28,7 +28,6 @@ public class GameManagerMain : MonoBehaviour
     private string currentPlayerName = "Player";
     private bool nameSubmitted = false;
 
-    // Main Scene: Cover transition integration
     private CoverTransitionManagerMain coverTransitionManager;
 
     void Start()
@@ -144,7 +143,6 @@ public class GameManagerMain : MonoBehaviour
             }
         }
 
-        // Main Scene: Check for game over (all waves cleared)
         if (currentState == MenuState.None && coverTransitionManager != null)
         {
             if (coverTransitionManager.CurrentIndex >= coverTransitionManager.SplineStops.Count)
@@ -582,5 +580,16 @@ public class GameManagerMain : MonoBehaviour
     {
         Debug.Log("GameManagerMain: Game Over triggered due to player death.");
         ShowGameOverScreen();
+    }
+
+    // Added methods to check menu state
+    public bool IsPaused()
+    {
+        return currentState == MenuState.Pause;
+    }
+
+    public bool IsGameOver()
+    {
+        return currentState == MenuState.GameOver;
     }
 }
