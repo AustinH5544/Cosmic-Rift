@@ -1,63 +1,84 @@
-using UnityEngine;
+using UnityEngine; // This line still makes 'Debug' accessible directly,
+                   // but explicitly writing UnityEngine.Debug is safer.
 
 public class BossCleanUp : MonoBehaviour
 {
     // Public variables to assign the child GameObjects in the Inspector.
-    // Assign these references in the Unity Editor after attaching this script to your boss object.
     public GameObject child1;
     public GameObject child2;
 
-    // Reference to the ChildRespawner script, assumed to be on the same GameObject.
-    private ChildRespawner childRespawner;
+    // Reference to the ChildRespawner script, which we now know is on one of the children.
+    private ChildRespawner childRespawnerToStop;
 
-    // Flag to ensure we only stop the ChildRespawner once.
-    private bool respawnerStopped = false;
+    // Flag to ensure we only stop/remove the ChildRespawner once.
+    private bool respawnerActioned = false; // Renamed for clarity, covers both stop and remove
 
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-        // Get the ChildRespawner component from this GameObject.
-        // If the ChildRespawner is on a different GameObject, you'll need to adjust this line.
-        childRespawner = GetComponent<ChildRespawner>();
-
         // Basic error checking: Ensure child references are set.
         if (child1 == null || child2 == null)
         {
-            Debug.LogError("BossCleanUp: Please assign both child GameObjects in the Inspector.", this);
-            // Optionally disable this script if children are not assigned to prevent errors.
+            UnityEngine.Debug.LogError("BossCleanUp: Please assign both child GameObjects in the Inspector.", this);
             enabled = false;
+            return;
         }
 
-        // Basic error checking: Ensure ChildRespawner script is found.
-        if (childRespawner == null)
+        // Try to find the ChildRespawner script on either child1 or child2.
+        if (child1 != null)
         {
-            Debug.LogWarning("BossCleanUp: ChildRespawner script not found on this GameObject. " +
-                             "The script will not be stopped.", this);
+            childRespawnerToStop = child1.GetComponent<ChildRespawner>();
+            if (childRespawnerToStop != null)
+            {
+                UnityEngine.Debug.Log($"BossCleanUp: ChildRespawner found on {child1.name}.");
+            }
+        }
+
+        if (childRespawnerToStop == null && child2 != null)
+        {
+            childRespawnerToStop = child2.GetComponent<ChildRespawner>();
+            if (childRespawnerToStop != null)
+            {
+                UnityEngine.Debug.Log($"BossCleanUp: ChildRespawner found on {child2.name}.");
+            }
+        }
+
+        if (childRespawnerToStop == null)
+        {
+            UnityEngine.Debug.LogWarning("BossCleanUp: ChildRespawner script not found on either specified child GameObject. The respawner will not be actioned (stopped/removed).", this);
         }
     }
 
-    // Update is called once per frame
     void Update()
     {
-        // Check if either child is destroyed and if the respawner hasn't been stopped yet.
-        // 'child1 == null' checks if the GameObject reference is no longer valid (i.e., it has been destroyed).
-        if ((child1 == null || child2 == null) && !respawnerStopped)
+        // --- Logic for the ChildRespawner ---
+        if (childRespawnerToStop != null && !respawnerActioned)
         {
-            // If the ChildRespawner exists, disable it.
-            if (childRespawner != null)
+            // If either child (child1 or child2) is destroyed (becomes null in Unity)
+            // OR if the ChildRespawner's *own* GameObject (the one it's attached to) is destroyed (becomes null)
+            if (child1 == null || child2 == null || childRespawnerToStop.gameObject == null)
             {
-                childRespawner.enabled = false;
-                Debug.Log("BossCleanUp: ChildRespawner script has been stopped because one or more children are dead.");
+                // Stop any running coroutines before destroying the component.
+                childRespawnerToStop.StopAllCoroutines();
+
+                // Destroy the component (or disable it, depending on your preference)
+                UnityEngine.Object.Destroy(childRespawnerToStop); // Use UnityEngine.Object.Destroy for components
+
+                UnityEngine.Debug.Log($"BossCleanUp: ChildRespawner component removed from its GameObject because one or more children are dead.");
+                respawnerActioned = true; // Set the flag to true to prevent further action.
             }
-            respawnerStopped = true; // Set the flag to true to prevent stopping it again.
         }
 
-        // Check if both children are destroyed.
-        if (child1 == null && child2 == null)
+        // --- Logic for destroying the Boss object based on children's children ---
+        bool child1HasNoChildren = (child1 != null && child1.transform.childCount == 0);
+        bool child2HasNoChildren = (child2 != null && child2.transform.childCount == 0);
+
+        bool child1ConditionMet = (child1 == null || child1HasNoChildren);
+        bool child2ConditionMet = (child2 == null || child2HasNoChildren);
+
+        if (child1ConditionMet && child2ConditionMet)
         {
-            Debug.Log("BossCleanUp: All children are destroyed. Destroying boss object: " + gameObject.name);
-            // Destroy this GameObject (the boss object).
-            Destroy(gameObject);
+            UnityEngine.Debug.Log("BossCleanUp: Both children (or their remnants) have no children of their own. Destroying boss object: " + gameObject.name);
+            UnityEngine.Object.Destroy(gameObject); // Use UnityEngine.Object.Destroy for GameObjects
         }
     }
 }
