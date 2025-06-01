@@ -1597,12 +1597,9 @@ MonoBehaviour:
   fireRate: 1.2
   bulletSpeed: 7
   rotationSpeed: 5
-  hitChanceGainRate: 1
-  hitChanceLossRate: 5
-  maxHitChance: 25
-  lineOfSightObstacleLayer:
-    serializedVersion: 2
-    m_Bits: 0
+  hitChanceGainRate: 5
+  hitChanceLossRate: 10
+  maxHitChance: 75
   missBuffer: 1
   missRangeMultiplier: 3
   impactGlowDuration: 0.5

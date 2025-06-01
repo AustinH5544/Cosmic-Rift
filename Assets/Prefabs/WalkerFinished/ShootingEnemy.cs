@@ -13,16 +13,14 @@ public class ShootingEnemy : MonoBehaviour
     public float rotationSpeed = 5f; // Speed at which the enemy rotates to face the player
 
     [Header("Dynamic Hit Chance")]
-    [Tooltip("Points of hit chance gained per second while seeing player.")]
+    [Tooltip("Points of hit chance gained per second while player is exposed (not in cover).")]
     public float hitChanceGainRate = 10f;
-    [Tooltip("Points of hit chance lost per second while not seeing player.")]
+    [Tooltip("Points of hit chance lost per second while player is in cover.")]
     public float hitChanceLossRate = 20f;
     [Range(0f, 100f)]
     [Tooltip("Maximum hit chance percentage the enemy can achieve.")]
     public float maxHitChance = 90f;
-    [Tooltip("Layers that should block the enemy's line of sight (e.g., Environment, Walls).")]
-    public LayerMask lineOfSightObstacleLayer;
-    // REMOVED: public float barrierHitChanceLossMultiplier = 1.5f; // This is no longer needed
+    // Removed lineOfSightObstacleLayer as it's no longer used for hit chance
 
     [Header("Dynamic Miss Offset Calculation")]
     [Tooltip("Extra padding added to player's size + bullet's size to ensure misses don't hit.")]
@@ -34,7 +32,7 @@ public class ShootingEnemy : MonoBehaviour
     public float impactGlowDuration = 0.2f;
     public Color impactGlowColor = UnityEngine.Color.red;
 
-    // Audio settings for shooting sound
+    // NEW: Audio settings for shooting sound
     [Header("Audio Settings")]
     public AudioClip shootSound; // Sound to play when Walker fires
     private AudioSource audioSource; // AudioSource to play the sound
@@ -53,6 +51,7 @@ public class ShootingEnemy : MonoBehaviour
 
     private float nextFireTime;
     private UnityEngine.Collider playerMainCollider;
+    private CoverControllerMain coverController; // NEW: Reference to the CoverControllerMain
 
     void Start()
     {
@@ -67,7 +66,16 @@ public class ShootingEnemy : MonoBehaviour
         else
         {
             UnityEngine.Debug.LogError("ShootingEnemy: No 'Main Camera' found! Ensure your main camera is tagged 'MainCamera' in the Inspector. This enemy cannot function without a player target.", this);
-            enabled = false;
+            enabled = false; // Disable this script if no player is found
+            return;
+        }
+
+        // NEW: Find the CoverControllerMain instance
+        coverController = UnityEngine.Object.FindFirstObjectByType<CoverControllerMain>();
+        if (coverController == null)
+        {
+            UnityEngine.Debug.LogError("ShootingEnemy: CoverControllerMain script not found in the scene! Ensure it's attached to an active GameObject.", this);
+            enabled = false; // Disable if no cover controller is found
             return;
         }
 
@@ -119,6 +127,7 @@ public class ShootingEnemy : MonoBehaviour
         if (playerMainCollider != null && bulletPrefab != null)
         {
             float playerHorizontalRadius = Mathf.Max(playerMainCollider.bounds.extents.x, playerMainCollider.bounds.extents.z);
+
             float bulletRadius = 0f;
             Collider bulletCollider = bulletPrefab.GetComponent<Collider>();
             if (bulletCollider != null)
@@ -148,7 +157,7 @@ public class ShootingEnemy : MonoBehaviour
             audioSource.volume = PlayerPrefs.GetFloat("SFXVolume", 1f);
         }
 
-        if (playerTransform != null && shootingPoint != null)
+        if (playerTransform != null && shootingPoint != null && coverController != null) // Added coverController null check
         {
             UpdateHitChance();
             RotateTowardsPlayer();
@@ -169,76 +178,33 @@ public class ShootingEnemy : MonoBehaviour
             {
                 UnityEngine.Debug.LogWarning("ShootingEnemy: Shooting Point Transform is missing! Cannot operate.", this);
             }
+            if (coverController == null) // Added specific warning for missing CoverController
+            {
+                UnityEngine.Debug.LogWarning("ShootingEnemy: CoverControllerMain is missing! Cannot determine player cover status.", this);
+            }
         }
     }
 
-    // Enum to describe line of sight status
-    private enum LineOfSightStatus
-    {
-        Clear,
-        Obstructed, // Covers both "Barrier" and "FullyObstructed" cases now
-    }
-
-    /// <summary>
-    /// Updates the current hit chance based on line of sight to the player.
-    /// The hit chance is lost at a standard rate if sight is obstructed.
-    /// </summary>
     void UpdateHitChance()
     {
-        LineOfSightStatus sightStatus = GetLineOfSightStatus();
+        // NEW: Determine if the player is exposed based on the CoverControllerMain
+        bool playerExposed = !coverController.IsInCover();
 
-        if (sightStatus == LineOfSightStatus.Clear)
+        if (playerExposed)
         {
-            // Player is clearly visible, gain hit chance
             currentHitChance += hitChanceGainRate * UnityEngine.Time.deltaTime;
         }
-        else // LineOfSightStatus.Obstructed
+        else // Player is in cover
         {
-            // Player is obstructed by a barrier or something else, lose hit chance at the standard rate
             currentHitChance -= hitChanceLossRate * UnityEngine.Time.deltaTime;
         }
 
         currentHitChance = UnityEngine.Mathf.Clamp(currentHitChance, 0f, maxHitChance);
     }
 
-    /// <summary>
-    /// Checks the line of sight to the player and determines if it's clear or obstructed.
-    /// Obstructed includes both "Barrier" and other full obstacles.
-    /// </summary>
-    /// <returns>A LineOfSightStatus enum indicating the visibility.</returns>
-    private LineOfSightStatus GetLineOfSightStatus()
-    {
-        if (playerMainCollider == null)
-        {
-            return LineOfSightStatus.Obstructed; // No player collider, so considered obstructed
-        }
+    // This method is no longer needed as line of sight is replaced by cover system
+    // bool CheckLineOfSight() { ... } 
 
-        UnityEngine.Vector3 rayOrigin = shootingPoint.position;
-        UnityEngine.Vector3 rayTarget = playerMainCollider.bounds.center;
-        UnityEngine.Vector3 rayDirection = (rayTarget - rayOrigin).normalized;
-        float rayDistance = UnityEngine.Vector3.Distance(rayOrigin, rayTarget);
-
-        UnityEngine.RaycastHit hit;
-        // Perform a raycast against the obstacle layer mask
-        if (UnityEngine.Physics.Raycast(rayOrigin, rayDirection, out hit, rayDistance + 0.1f, lineOfSightObstacleLayer))
-        {
-            // If the ray hits something, check if it's the Player.
-            // If it hits anything else (including "Barrier"), it's considered obstructed.
-            if (hit.collider.CompareTag("Player"))
-            {
-                return LineOfSightStatus.Clear;
-            }
-            else
-            {
-                return LineOfSightStatus.Obstructed;
-            }
-        }
-
-        // If the ray didn't hit anything in the obstacle layer, line of sight is clear.
-        return LineOfSightStatus.Clear;
-    }
-
-    // --- Using your provided RotateTowardsPlayer method ---
     void RotateTowardsPlayer()
     {
         UnityEngine.Vector3 directionToPlayerHorizontal = playerTransform.position - shootingPoint.position;
@@ -257,13 +223,13 @@ public class ShootingEnemy : MonoBehaviour
 
         transform.rotation = UnityEngine.Quaternion.Slerp(transform.rotation, targetEnemyRotation, UnityEngine.Time.deltaTime * rotationSpeed);
 
-        // --- DEBUG DRAW RAYS ---
         UnityEngine.Debug.DrawRay(transform.position, transform.forward * 5f, UnityEngine.Color.red, 0.1f);
+
         UnityEngine.Vector3 actualAimTarget = (playerMainCollider != null) ? playerMainCollider.bounds.center : playerTransform.position;
         UnityEngine.Vector3 actualShootDirection = (actualAimTarget - shootingPoint.position).normalized;
+
         UnityEngine.Debug.DrawRay(shootingPoint.position, actualShootDirection * 5f, UnityEngine.Color.blue, 0.1f);
         UnityEngine.Debug.DrawRay(actualAimTarget, UnityEngine.Vector3.up * 1f, UnityEngine.Color.green, 0.1f);
-        // --- END DEBUG DRAW RAYS ---
     }
 
     void ShootAtPlayerWithChance()
@@ -286,7 +252,7 @@ public class ShootingEnemy : MonoBehaviour
         {
             targetShootPosition = baseAimTarget;
         }
-        else
+        else // It's a miss
         {
             float missDistance = UnityEngine.Random.Range(_calculatedMissOffsetMin, _calculatedMissOffsetMax);
             float missAngle = UnityEngine.Random.Range(0f, 360f);
