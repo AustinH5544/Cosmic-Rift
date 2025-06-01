@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 
 public class PlayerHealth : MonoBehaviour
@@ -5,7 +6,7 @@ public class PlayerHealth : MonoBehaviour
     public int maxHealth = 100; // Maximum health of the player
     private int currentHealth;  // Current health of the player
     public GameManagerMain gameManager; // Reference to GameManagerMain for game over
-    public float invulnerabilityDuration = 2f; // How long the player is invulnerable after taking damage
+    public float invulnerabilityDuration = .1f; // How long the player is invulnerable after taking damage
     private bool isInvulnerable = false;
     void Start()
     {
