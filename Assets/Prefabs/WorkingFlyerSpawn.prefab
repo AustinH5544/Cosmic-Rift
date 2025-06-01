@@ -28,7 +28,7 @@ Transform:
   m_GameObject: {fileID: 879126982920483913}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.8070464, y: 6.56, z: -1.2036456}
+  m_LocalPosition: {x: 0.8070464, y: 4.89, z: -2.64}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -49,7 +49,7 @@ MeshRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 879126982920483913}
-  m_Enabled: 1
+  m_Enabled: 0
   m_CastShadows: 1
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1
@@ -102,7 +102,7 @@ BoxCollider:
     serializedVersion: 2
     m_Bits: 0
   m_LayerOverridePriority: 0
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
@@ -168,6 +168,7 @@ MonoBehaviour:
   attackReturnDelay: 0.4
   attackRotationOffset: 0
   attackSuccessDistance: 1
+  damageAmount: 10
   attackGlowColor: {r: 0.1598355, g: 0.26415092, b: 0.12709145, a: 1}
   glowIntensity: 0.2
   attackDirectionGizmoColor: {r: 1, g: 0, b: 1, a: 1}
@@ -201,8 +202,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 7, y: 2, z: 7}
-  m_Center: {x: 0, y: 0, z: 0}
+  m_Size: {x: 7, y: 4.883902, z: 7}
+  m_Center: {x: 0, y: 1.4419508, z: 0}
 --- !u!114 &7104721498724647167
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -243,7 +244,7 @@ Transform:
   m_GameObject: {fileID: 6320492890943881888}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.8070464, y: 0.6300001, z: -1.2036456}
+  m_LocalPosition: {x: 0.8070464, y: 2.66, z: -1.2036456}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -317,7 +318,7 @@ CapsuleCollider:
     serializedVersion: 2
     m_Bits: 0
   m_LayerOverridePriority: 0
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 2

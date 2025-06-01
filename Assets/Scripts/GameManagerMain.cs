@@ -170,18 +170,23 @@ public class GameManagerMain : MonoBehaviour
             case MenuState.GameOver:
                 DrawGameOverMenu();
                 break;
+
             case MenuState.Pause:
                 DrawPauseMenu();
                 break;
+
             case MenuState.Options:
                 DrawOptionsMenu();
                 break;
+
             case MenuState.SoundSettings:
                 DrawSoundSettings();
                 break;
+
             case MenuState.ControlsSettings:
                 DrawControlsSettings();
                 break;
+
             case MenuState.Leaderboard:
                 DrawLeaderboard();
                 break;
