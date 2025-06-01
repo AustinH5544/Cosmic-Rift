@@ -183,6 +183,7 @@ MonoBehaviour:
   funnelTargetPoint: {fileID: 3447270621951998059}
   spawnDelay: 0.5
   spawnerDestroyDelay: 1
+  playerCoverController: {fileID: 3796925374917702888, guid: 21936048e885df24bbc3aee56c187862, type: 3}
 --- !u!65 &7950311899863053238
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -202,8 +203,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 7, y: 4.883902, z: 7}
-  m_Center: {x: 0, y: 1.4419508, z: 0}
+  m_Size: {x: 7, y: 3.0873332, z: 7}
+  m_Center: {x: 0, y: 2.3402355, z: 0}
 --- !u!114 &7104721498724647167
 MonoBehaviour:
   m_ObjectHideFlags: 0
