@@ -108,6 +108,12 @@ public class BulletBehavior : MonoBehaviour
 
             return; // Exit after handling player hit
         }
+         else if (other.CompareTag("barrier"))
+        {
+            // If it hits a barrier, destroy the bullet immediately without glow
+            Destroy(gameObject);
+            return; // Exit after handling barrier hit
+        }
 
         // If the bullet was set to target a specific transform and it hits that target
         if (targetTransform != null && other.transform == targetTransform)
