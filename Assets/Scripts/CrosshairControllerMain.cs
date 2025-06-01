@@ -30,6 +30,7 @@ public class CrosshairControllerMain : MonoBehaviour
     public LayerMask shootableLayers;
 
     private GameManagerMain gameManager;
+    private CoverTransitionManagerMain coverManager; // NEW: Added to directly access IsInCombat
 
     void Start()
     {
@@ -76,6 +77,13 @@ public class CrosshairControllerMain : MonoBehaviour
             UnityEngine.Debug.LogError("CrosshairControllerMain: GameManagerMain not found in the scene!");
         }
 
+        // NEW: Find the CoverTransitionManagerMain instance
+        coverManager = UnityEngine.Object.FindFirstObjectByType<CoverTransitionManagerMain>();
+        if (coverManager == null)
+        {
+            UnityEngine.Debug.LogError("CrosshairControllerMain: CoverTransitionManagerMain not found in the scene!");
+        }
+
         UpdateUI(); // Initial UI update
     }
 
@@ -91,26 +99,58 @@ public class CrosshairControllerMain : MonoBehaviour
         Vector2 mousePosition = Input.mousePosition;
         crosshairRect = new Rect(mousePosition.x - crosshairTexture.width / 2f, Screen.height - mousePosition.y - crosshairTexture.height / 2f, crosshairTexture.width, crosshairTexture.height);
 
-        // If the player cannot shoot (e.g., game paused, game over, or not in combat)
-        if (!CanShoot())
+        // Check if reloading is complete (this check should always run, regardless of shooting state)
+        if (isReloading && Time.time >= reloadStartTime + reloadTime)
         {
-            // Check if reloading is complete
-            if (isReloading && Time.time >= reloadStartTime + reloadTime)
-            {
-                FinishReload();
-            }
-            return; // Exit Update early if shooting is not allowed
+            FinishReload();
         }
 
-        // Handle shooting input
-        if (Input.GetKeyDown(shootKey) && CanShoot())
+        // Handle reload input (R key or shooting when ammo is 0)
+        // This block is now outside the CanShoot() gate, allowing reloads while moving
+        if (!isReloading) // Only allow initiating a reload if not already reloading
+        {
+            bool triggerReload = false;
+
+            // Manual reload via 'R' key
+            if (Input.GetKeyDown(KeyCode.R) && currentAmmo != maxAmmo)
+            {
+                triggerReload = true;
+            }
+            // Auto-reload on empty clip after a failed shot attempt (only if not already reloading)
+            else if (currentAmmo == 0 && Input.GetKeyDown(shootKey))
+            {
+                triggerReload = true;
+            }
+
+            if (triggerReload)
+            {
+                // Ensure we don't try to reload if the game is paused/over,
+                // UNLESS you specifically want to allow reloading in those states.
+                // For a typical game, reloading should be prevented during pause/game over.
+                if (gameManager != null && (gameManager.IsPaused() || gameManager.IsGameOver()))
+                {
+                    // Do nothing, can't reload
+                }
+                else
+                {
+                    Reload();
+                }
+            }
+        }
+
+
+        // Only proceed with shooting logic if shooting is allowed
+        if (!CanShoot())
+        {
+            // If we can't shoot, we've already handled potential reload completions or new reload inputs above.
+            // So, we just return here.
+            return;
+        }
+
+        // Handle shooting input (This part only runs if CanShoot() is true)
+        if (Input.GetKeyDown(shootKey)) // CanShoot() is already checked by the 'if' block above
         {
             Shoot();
-        }
-        // Handle reload input (R key or shooting when ammo is 0)
-        else if (Input.GetKeyDown(KeyCode.R) && currentAmmo != maxAmmo || (currentAmmo == 0 && Input.GetKeyDown(shootKey)))
-        {
-            Reload();
         }
 
         // Update audio source volume based on PlayerPrefs
@@ -175,28 +215,31 @@ public class CrosshairControllerMain : MonoBehaviour
             audioSource.PlayOneShot(shootSound);
         }
 
-        // If ammo runs out, automatically initiate reload
-        if (currentAmmo == 0)
-        {
-            Reload();
-        }
+        // NO LONGER AUTO RELOAD HERE. The new update loop handles it.
+        // if (currentAmmo == 0)
+        // {
+        //     Reload();
+        // }
     }
 
     // Initiates the reload process
     void Reload()
     {
         if (isReloading) return; // Prevent multiple reloads
+        if (currentAmmo == maxAmmo) return; // Prevent reloading if already full
 
+        UnityEngine.Debug.Log("Initiating Reload...");
         isReloading = true; // Set reloading flag to true
         reloadStartTime = Time.time; // Record reload start time
         // Schedule FinishReload to be called after reloadTime seconds
-        Invoke(nameof(FinishReload), reloadTime);
+        // Invoke(nameof(FinishReload), reloadTime); // The Update loop now handles completion
 
         // Play the reload sound if available
         if (audioSource != null && reloadSound != null)
         {
             audioSource.PlayOneShot(reloadSound);
         }
+        UpdateUI(); // Update UI immediately to show "Reloading..."
     }
 
     // Completes the reload process
@@ -204,6 +247,8 @@ public class CrosshairControllerMain : MonoBehaviour
     {
         currentAmmo = maxAmmo; // Restore ammo to max
         isReloading = false; // Set reloading flag to false
+        UnityEngine.Debug.Log("Reload Finished!");
+        UpdateUI(); // Update UI after reload
     }
 
     // Called when the GameObject is destroyed
@@ -230,8 +275,7 @@ public class CrosshairControllerMain : MonoBehaviour
             }
         }
 
-        // Check if the player is in combat via CoverTransitionManagerMain
-        var coverManager = UnityEngine.Object.FindFirstObjectByType<CoverTransitionManagerMain>();
+        // Use the stored reference
         bool inCombat = coverManager != null && coverManager.IsInCombat;
 
         // Check if there's ammo and not currently reloading
@@ -306,7 +350,7 @@ public class CrosshairControllerMain : MonoBehaviour
         // If currently reloading, cancel the invoke and reset the flag
         if (isReloading)
         {
-            CancelInvoke(nameof(FinishReload));
+            // We removed Invoke, so just reset the flag
             isReloading = false;
         }
         UpdateUI(); // Update UI after resetting stats
