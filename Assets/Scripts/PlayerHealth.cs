@@ -25,7 +25,7 @@ public class PlayerHealth : MonoBehaviour
                 if (!isInvulnerable)
                 {  
                     currentHealth = Mathf.Max(0, currentHealth - damageAmount); // Reduce health, clamp to 0
-                    Debug.Log($"Player took {damageAmount} damage. Current Health: {currentHealth}");
+                    UnityEngine.Debug.Log($"Player took {damageAmount} damage. Current Health: {currentHealth}");
                     StartCoroutine(BecomeTemporarilyInvulnerable());
                 }
             }
