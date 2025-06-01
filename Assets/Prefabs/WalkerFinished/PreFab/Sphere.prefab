@@ -31,7 +31,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -0.567, y: 2.135, z: 0.9049027}
-  m_LocalScale: {x: 0.2, y: 0.2, z: 0.2}
+  m_LocalScale: {x: 0.1, y: 0.1, z: 0.3}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -67,7 +67,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: d93451e55d3b57244b16492509499965, type: 2}
+  - {fileID: 2100000, guid: f441ffa0eca5f0d4a983a7faa148123e, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -134,10 +134,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8118e478aa644bb40851a75cfbc56715, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  predictionDistance: 0.005
-  predictionRadius: 0.05
-  playerLayer:
-    serializedVersion: 2
-    m_Bits: 64
   warningColor: {r: 1, g: 0, b: 0, a: 1}
   fadeSpeed: 4
