@@ -20,7 +20,6 @@ public class ShootingEnemy : MonoBehaviour
     [Range(0f, 100f)]
     [Tooltip("Maximum hit chance percentage the enemy can achieve.")]
     public float maxHitChance = 90f;
-    // Removed lineOfSightObstacleLayer as it's no longer used for hit chance
 
     [Header("Dynamic Miss Offset Calculation")]
     [Tooltip("Extra padding added to player's size + bullet's size to ensure misses don't hit.")]
@@ -30,9 +29,11 @@ public class ShootingEnemy : MonoBehaviour
 
     [Header("Impact Settings")]
     public float impactGlowDuration = 0.2f;
-    public Color impactGlowColor = UnityEngine.Color.red;
+    // Removed impactGlowColor from public variable as it will now be determined by hit/miss
+    public Color hitGlowColor = UnityEngine.Color.red; // New: Color for a hit bullet
+    public Color missGlowColor = UnityEngine.Color.blue; // New: Color for a miss bullet (optional, can be black/clear)
 
-    // NEW: Audio settings for shooting sound
+    // Audio settings for shooting sound
     [Header("Audio Settings")]
     public AudioClip shootSound; // Sound to play when Walker fires
     private AudioSource audioSource; // AudioSource to play the sound
@@ -51,7 +52,7 @@ public class ShootingEnemy : MonoBehaviour
 
     private float nextFireTime;
     private UnityEngine.Collider playerMainCollider;
-    private CoverControllerMain coverController; // NEW: Reference to the CoverControllerMain
+    private CoverControllerMain coverController;
 
     void Start()
     {
@@ -70,7 +71,6 @@ public class ShootingEnemy : MonoBehaviour
             return;
         }
 
-        // NEW: Find the CoverControllerMain instance
         coverController = UnityEngine.Object.FindFirstObjectByType<CoverControllerMain>();
         if (coverController == null)
         {
@@ -157,7 +157,7 @@ public class ShootingEnemy : MonoBehaviour
             audioSource.volume = PlayerPrefs.GetFloat("SFXVolume", 1f);
         }
 
-        if (playerTransform != null && shootingPoint != null && coverController != null) // Added coverController null check
+        if (playerTransform != null && shootingPoint != null && coverController != null)
         {
             UpdateHitChance();
             RotateTowardsPlayer();
@@ -178,7 +178,7 @@ public class ShootingEnemy : MonoBehaviour
             {
                 UnityEngine.Debug.LogWarning("ShootingEnemy: Shooting Point Transform is missing! Cannot operate.", this);
             }
-            if (coverController == null) // Added specific warning for missing CoverController
+            if (coverController == null)
             {
                 UnityEngine.Debug.LogWarning("ShootingEnemy: CoverControllerMain is missing! Cannot determine player cover status.", this);
             }
@@ -187,7 +187,6 @@ public class ShootingEnemy : MonoBehaviour
 
     void UpdateHitChance()
     {
-        // NEW: Determine if the player is exposed based on the CoverControllerMain
         bool playerExposed = !coverController.IsInCover();
 
         if (playerExposed)
@@ -201,9 +200,6 @@ public class ShootingEnemy : MonoBehaviour
 
         currentHitChance = UnityEngine.Mathf.Clamp(currentHitChance, 0f, maxHitChance);
     }
-
-    // This method is no longer needed as line of sight is replaced by cover system
-    // bool CheckLineOfSight() { ... } 
 
     void RotateTowardsPlayer()
     {
@@ -236,7 +232,11 @@ public class ShootingEnemy : MonoBehaviour
     {
         UnityEngine.Vector3 targetShootPosition;
         float roll = UnityEngine.Random.value * 100f;
-        bool isHit = (roll <= currentHitChance);
+        bool isHit = (roll <= currentHitChance); // This determines if the bullet *should* hit
+
+        // Determine if the bullet should be red (only if it's an intended hit)
+        bool thisIsRedBullet = isHit;
+        Color currentImpactGlowColor = isHit ? hitGlowColor : missGlowColor; // Use hitGlowColor if it's a hit, else missGlowColor
 
         UnityEngine.Vector3 baseAimTarget;
         if (playerMainCollider != null)
@@ -292,7 +292,8 @@ public class ShootingEnemy : MonoBehaviour
 
             if (bulletBehavior != null && playerTransform != null)
             {
-                bulletBehavior.SetTarget(playerTransform, impactGlowDuration, impactGlowColor);
+                // Pass the 'thisIsRedBullet' flag and the conditional glow color
+                bulletBehavior.SetTarget(playerTransform, impactGlowDuration, currentImpactGlowColor, thisIsRedBullet);
             }
             else
             {

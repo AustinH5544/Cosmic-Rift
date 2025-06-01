@@ -5189,7 +5189,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   maxHealth: 100
   gameManager: {fileID: 1246579448}
-  invulnerabilityDuration: 0.1
+  coverTransitionManager: {fileID: 0}
+  invulnerabilityDuration: 0.15
   damageSound: {fileID: 8300000, guid: 2a3310d46143e40c8a8cb18d59b19dde, type: 3}
 --- !u!136 &1098529307
 CapsuleCollider:

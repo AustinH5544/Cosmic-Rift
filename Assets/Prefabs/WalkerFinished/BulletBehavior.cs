@@ -11,7 +11,9 @@ public class BulletBehavior : MonoBehaviour
     private float glowStartTime;
     private bool hasHit = false;
 
-    public int damageAmount = 5; // Default damage, ensure PlayerHealth.TakeDamage accepts a float
+    public int damageAmount = 0; // Default damage
+    public int redBulletDamageIncrease = 15;
+    public bool isRedBullet = false; // New public variable to identify red bullets
 
     void Start()
     {
@@ -47,11 +49,12 @@ public class BulletBehavior : MonoBehaviour
         }
     }
 
-    public void SetTarget(Transform target, float glowDuration, Color glowColor)
+    public void SetTarget(Transform target, float glowDuration, Color glowColor, bool isRed = false) // Added isRed parameter
     {
         targetTransform = target;
         impactGlowDuration = glowDuration;
         impactGlowColor = glowColor;
+        isRedBullet = isRed; // Set the red bullet flag
     }
 
     void Update()
@@ -85,13 +88,22 @@ public class BulletBehavior : MonoBehaviour
         // Try to get the PlayerHealth component from the collided object
         PlayerHealth playerHealth = other.GetComponent<PlayerHealth>();
 
+        // Calculate final damage
+        int finalDamage = damageAmount;
+        if (isRedBullet)
+        {
+            finalDamage += redBulletDamageIncrease;
+        }
+
         // If the collided object has a PlayerHealth component, it's the player
         if (playerHealth != null)
         {
             // The bullet has hit the player
-            playerHealth.TakeDamage(damageAmount);
+            if (finalDamage > 0) 
+            { 
+            playerHealth.TakeDamage(finalDamage); // Use finalDamage
             hasHit = true; // Mark as hit
-
+            }
             // Initiate glow effect
             if (bulletRenderer != null)
             {
@@ -116,6 +128,9 @@ public class BulletBehavior : MonoBehaviour
         }
 
         // If the bullet was set to target a specific transform and it hits that target
+        // This block likely implies the target is an enemy or another specific object, not necessarily the player.
+        // If hitting this target should also deal damage to the player, you'd need to re-evaluate the game logic.
+        // For now, assuming hitting the targetTransform just triggers the glow and potentially destoys the bullet.
         if (targetTransform != null && other.transform == targetTransform)
         {
             hasHit = true; // Mark as hit
@@ -124,8 +139,6 @@ public class BulletBehavior : MonoBehaviour
             if (bulletRenderer != null)
             {
                 glowStartTime = Time.time;
-                damageAmount = 20;
-
             }
 
             // Optionally disable the collider to prevent further triggers
@@ -134,7 +147,11 @@ public class BulletBehavior : MonoBehaviour
             {
                 bulletCollider.enabled = false;
             }
+            // If hitting the targetTransform should *also* damage the player (which is unusual
+            // unless targetTransform *is* the player), you'd put playerHealth.TakeDamage(finalDamage); here as well.
+            // However, the previous 'if (playerHealth != null)' block already handles direct player hits.
+            // If this bullet is specifically designed to hit an *enemy* target and do something else,
+            // then you'd add that enemy damage logic here.
         }
-    
     }
 }
