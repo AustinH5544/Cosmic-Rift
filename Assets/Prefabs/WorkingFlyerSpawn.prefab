@@ -162,13 +162,13 @@ MonoBehaviour:
   flySpeed: 2
   minFlightHeightRatio: 0.1
   maxFlightHeightRatio: 0.9
-  attackSpeedMultiplier: 2
+  attackSpeedMultiplier: 2.5
   attackCooldown: 5
   player: {fileID: 2648194303276082455, guid: fb4ecebb642dfb245948a758c0b8ac46, type: 3}
   attackReturnDelay: 0.4
   attackRotationOffset: 0
   attackSuccessDistance: 1
-  damageAmount: 10
+  damageAmount: 25
   attackGlowColor: {r: 0.1598355, g: 0.26415092, b: 0.12709145, a: 1}
   glowIntensity: 0.2
   attackDirectionGizmoColor: {r: 1, g: 0, b: 1, a: 1}
