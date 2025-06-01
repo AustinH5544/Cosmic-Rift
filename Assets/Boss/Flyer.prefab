@@ -247,7 +247,7 @@ GameObject:
   - component: {fileID: 5451111914742859069}
   m_Layer: 0
   m_Name: Flyer
-  m_TagString: Untagged
+  m_TagString: Spawner
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -309,6 +309,7 @@ MonoBehaviour:
   spawnDelay: 0.5
   spawnerDestroyDelay: 2
   playerCoverController: {fileID: 0}
+  biteSound: {fileID: 8300000, guid: 86bd243bf3c3f4b68aa50274ad83df90, type: 3}
 --- !u!65 &60019568260695358
 BoxCollider:
   m_ObjectHideFlags: 0

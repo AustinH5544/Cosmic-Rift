@@ -333,6 +333,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   maxHealth: 2
+  currentHealth: 0
   hitboxCollider: {fileID: 7377523101049026488}
 --- !u!135 &7377523101049026488
 SphereCollider:

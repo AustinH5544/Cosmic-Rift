@@ -12,7 +12,6 @@ GameObject:
   - component: {fileID: 7870307766732780531}
   - component: {fileID: 1095317237608967771}
   - component: {fileID: 6521364158809075694}
-  - component: {fileID: 984062211728791814}
   - component: {fileID: 4142558715779568240}
   m_Layer: 0
   m_Name: DamagePoint1
@@ -110,18 +109,6 @@ SphereCollider:
   serializedVersion: 3
   m_Radius: 0.5
   m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &984062211728791814
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1777120555471202212}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9a298b44aaff67c44a8dcecfb9addce0, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!114 &4142558715779568240
 MonoBehaviour:
   m_ObjectHideFlags: 0

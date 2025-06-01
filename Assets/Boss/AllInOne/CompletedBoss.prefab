@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4352824425872224299}
   - component: {fileID: 5647650506311110188}
+  - component: {fileID: 6362739923399415004}
   m_Layer: 0
   m_Name: CompletedBoss
   m_TagString: Spawner
@@ -48,6 +49,18 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   child1: {fileID: 5508048321105446670}
   child2: {fileID: 9117099219520409108}
+--- !u!114 &6362739923399415004
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1913361843513657072}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9a298b44aaff67c44a8dcecfb9addce0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1001 &1578415567147357042
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -158,6 +171,10 @@ PrefabInstance:
     - target: {fileID: 3812373822386833840, guid: 9ce511f0a83189246b65c5235ca9be0e, type: 3}
       propertyPath: m_Name
       value: FlyerSpawner
+      objectReference: {fileID: 0}
+    - target: {fileID: 3812373822386833840, guid: 9ce511f0a83189246b65c5235ca9be0e, type: 3}
+      propertyPath: m_TagString
+      value: Spawner
       objectReference: {fileID: 0}
     - target: {fileID: 4029804689321999042, guid: 9ce511f0a83189246b65c5235ca9be0e, type: 3}
       propertyPath: m_LocalPosition.x

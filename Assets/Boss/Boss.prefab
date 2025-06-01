@@ -98,7 +98,6 @@ GameObject:
   - component: {fileID: 6286926619168181514}
   - component: {fileID: 7283895320491232836}
   - component: {fileID: 7864592170095704986}
-  - component: {fileID: 4630455311459776624}
   - component: {fileID: 6569209283024201309}
   m_Layer: 0
   m_Name: DamagePointSpawn1
@@ -196,18 +195,6 @@ SphereCollider:
   serializedVersion: 3
   m_Radius: 0.5
   m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &4630455311459776624
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1690596589815772776}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9a298b44aaff67c44a8dcecfb9addce0, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!114 &6569209283024201309
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -883,7 +870,6 @@ GameObject:
   - component: {fileID: 2795919188802846698}
   - component: {fileID: 5168975032822385148}
   - component: {fileID: 2482412836924818201}
-  - component: {fileID: 4250954933115695223}
   - component: {fileID: 49526305441703470}
   m_Layer: 0
   m_Name: DamagePointSpawn2
@@ -981,18 +967,6 @@ SphereCollider:
   serializedVersion: 3
   m_Radius: 0.5
   m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &4250954933115695223
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8986998796865175253}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9a298b44aaff67c44a8dcecfb9addce0, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!114 &49526305441703470
 MonoBehaviour:
   m_ObjectHideFlags: 0
