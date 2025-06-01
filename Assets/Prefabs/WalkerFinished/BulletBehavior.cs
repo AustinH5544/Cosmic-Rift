@@ -108,7 +108,7 @@ public class BulletBehavior : MonoBehaviour
 
             return; // Exit after handling player hit
         }
-        else if (other.CompareTag("barrier")) // Using CompareTag is more efficient than checking gameObject.name
+        else if (other.CompareTag("Barrier")) // Using CompareTag is more efficient than checking gameObject.name
         {
             // If it hits a barrier, destroy the bullet immediately without glow
             Destroy(gameObject);
@@ -133,6 +133,6 @@ public class BulletBehavior : MonoBehaviour
                 bulletCollider.enabled = false;
             }
         }
-    .
+    
     }
 }
