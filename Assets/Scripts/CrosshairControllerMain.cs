@@ -108,7 +108,7 @@ public class CrosshairControllerMain : MonoBehaviour
             Shoot();
         }
         // Handle reload input (R key or shooting when ammo is 0)
-        else if (Input.GetKeyDown(KeyCode.R) || (currentAmmo == 0 && Input.GetKeyDown(shootKey)))
+        else if (Input.GetKeyDown(KeyCode.R) && currentAmmo != maxAmmo || (currentAmmo == 0 && Input.GetKeyDown(shootKey)))
         {
             Reload();
         }
