@@ -128,9 +128,9 @@ public class BulletBehavior : MonoBehaviour
             }
         }
         // Add a condition here if you want the bullet to destroy on hitting *anything* else
-        // else if (!hasHit) // If it hits something that's not the player or target
-        // {
-        //     Destroy(gameObject); // Destroy immediately without glow
-        // }
+         else if (!hasHit) // If it hits something that's not the player or target
+         {
+             Destroy(gameObject); // Destroy immediately without glow
+         }
     }
 }
