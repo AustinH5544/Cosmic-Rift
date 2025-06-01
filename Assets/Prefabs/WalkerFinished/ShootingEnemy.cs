@@ -29,6 +29,15 @@ public class ShootingEnemy : MonoBehaviour
     [Tooltip("Multiplier used to determine the maximum miss distance relative to the minimum.")]
     public float missRangeMultiplier = 3.0f; // Max miss = min miss * this multiplier
 
+    [Header("Impact Settings")]
+    public float impactGlowDuration = 0.2f;
+    public Color impactGlowColor = UnityEngine.Color.red;
+
+    // NEW: Audio settings for shooting sound
+    [Header("Audio Settings")]
+    public AudioClip shootSound; // Sound to play when Walker fires
+    private AudioSource audioSource; // AudioSource to play the sound
+
     [SerializeField]
     [Tooltip("The actual fluctuating hit chance percentage (0 to maxHitChance).")]
     private float currentHitChance = 0f;
@@ -43,10 +52,6 @@ public class ShootingEnemy : MonoBehaviour
 
     private float nextFireTime;
     private UnityEngine.Collider playerMainCollider;
-
-    [Header("Impact Settings")]
-    public float impactGlowDuration = 0.2f;
-    public Color impactGlowColor = UnityEngine.Color.red;
 
     void Start()
     {
@@ -68,6 +73,10 @@ public class ShootingEnemy : MonoBehaviour
             enabled = false; // Disable this script if no player is found
             return;
         }
+
+        // NEW: Initialize AudioSource for shooting sound
+        audioSource = gameObject.AddComponent<AudioSource>();
+        audioSource.volume = PlayerPrefs.GetFloat("SFXVolume", 1f);
 
         // Calculate dynamic miss offsets once playerMainCollider is set
         CalculateDynamicMissOffsets();
@@ -149,6 +158,12 @@ public class ShootingEnemy : MonoBehaviour
 
     void Update()
     {
+        // NEW: Update SFX volume based on PlayerPrefs
+        if (audioSource != null)
+        {
+            audioSource.volume = PlayerPrefs.GetFloat("SFXVolume", 1f);
+        }
+
         if (playerTransform != null && shootingPoint != null)
         {
             UpdateHitChance();
@@ -268,7 +283,6 @@ public class ShootingEnemy : MonoBehaviour
         // --- END DEBUG DRAW RAYS ---
     }
 
-
     void ShootAtPlayerWithChance()
     {
         UnityEngine.Vector3 targetShootPosition;
@@ -316,6 +330,12 @@ public class ShootingEnemy : MonoBehaviour
         {
             // *** IMPORTANT FIX: Set the bullet's initial rotation to face the shootDirection ***
             GameObject bullet = UnityEngine.Object.Instantiate(bulletPrefab, shootingPoint.position, UnityEngine.Quaternion.LookRotation(shootDirection));
+
+            // NEW: Play shooting sound when bullet is fired
+            if (audioSource != null && shootSound != null)
+            {
+                audioSource.PlayOneShot(shootSound);
+            }
 
             BulletBehavior bulletBehavior = bullet.GetComponent<BulletBehavior>();
             BulletMover bulletMover = bullet.GetComponent<BulletMover>();
