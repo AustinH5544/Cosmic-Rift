@@ -75,6 +75,10 @@ public class EnemySpawnerAndController : MonoBehaviour
     // Delay before the spawner destroys itself after all enemies are defeated
     public float spawnerDestroyDelay = 2f;
 
+    // NEW: Reference to the Player's CoverControllerMain script.
+    // This MUST be assigned in the Inspector if your CoverControllerMain is not on the Main Camera.
+    public CoverControllerMain playerCoverController;
+
     // List of currently spawned enemy GameObjects
     private List<GameObject> spawnedEnemies = new List<GameObject>();
     // Dictionary to store coroutines for each enemy's flight behavior
@@ -99,21 +103,25 @@ public class EnemySpawnerAndController : MonoBehaviour
         if (enemyPrefab == null)
         {
             UnityEngine.Debug.LogError("Enemy Prefab is not assigned! Please assign an enemy prefab in the Inspector.");
+            enabled = false; // Disable script to prevent further errors
             return;
         }
         if (flightAreaCollider == null)
         {
             UnityEngine.Debug.LogError("Flight Area Collider is not assigned! Please assign a Box Collider in the Inspector.");
+            enabled = false;
             return;
         }
         if (funnelSpawnPoint == null)
         {
             UnityEngine.Debug.LogError("Funnel Spawn Point is not assigned! Please assign a Transform in the Inspector.");
+            enabled = false;
             return;
         }
         if (funnelTargetPoint == null)
         {
             UnityEngine.Debug.LogError("Funnel Target Point is not assigned! Please assign a Transform in the Inspector.");
+            enabled = false;
             return;
         }
 
@@ -122,10 +130,19 @@ public class EnemySpawnerAndController : MonoBehaviour
         {
             player = Camera.main.gameObject;
             UnityEngine.Debug.Log("Player automatically assigned to Main Camera.");
+
+            // WARNING: If playerCoverController is NOT assigned in the Inspector,
+            // and CoverControllerMain is not on the Main Camera, this will log a warning.
+            // Manual assignment in the Inspector is the recommended approach for this variable.
+            if (playerCoverController == null)
+            {
+                UnityEngine.Debug.LogWarning("Player Cover Controller is not assigned in the Inspector. Player cover status will not be checked for enemy attacks. Please drag the GameObject with CoverControllerMain into the 'Player Cover Controller' slot in the Inspector.");
+            }
         }
         else
         {
             UnityEngine.Debug.LogError("No Main Camera found! Please ensure your main camera is tagged 'MainCamera' in the Inspector.");
+            enabled = false;
             return;
         }
 
@@ -340,6 +357,15 @@ public class EnemySpawnerAndController : MonoBehaviour
         // Move towards the player until attack success distance is reached
         while (attackingEnemy != null && attackingEnemy.activeInHierarchy && player != null && UnityEngine.Vector3.Distance(attackingEnemy.transform.position, player.transform.position) > attackSuccessDistance)
         {
+            // NEW: Check if player is in cover
+            if (playerCoverController != null && playerCoverController.IsInCover())
+            {
+                UnityEngine.Debug.Log($"Flier {attackingEnemy.name}: Player went into cover. Aborting attack and returning to flight.");
+                SetEnemyGlow(attackingEnemy, false);
+                StartCoroutine(ReturnEnemyToFlight(attackingEnemy)); // Call new helper coroutine
+                yield break; // Exit the AttackPlayer coroutine
+            }
+
             // Lerp speed to attack speed
             currentEnemyAttackSpeed = Mathf.Lerp(currentEnemyAttackSpeed, originalFlySpeed * attackSpeedMultiplier, Time.deltaTime * 5f);
 
@@ -354,7 +380,7 @@ public class EnemySpawnerAndController : MonoBehaviour
                 attackingEnemy.transform.rotation = Quaternion.Slerp(attackingEnemy.transform.rotation, targetRotation, Time.deltaTime * rotationSpeed * attackSpeedMultiplier);
             }
 
-            // CORRECTED: Move the attacking enemy towards its current position + moveDirection
+            // Move the attacking enemy towards its current position + moveDirection
             attackingEnemy.transform.position = UnityEngine.Vector3.MoveTowards(attackingEnemy.transform.position, attackingEnemy.transform.position + moveDirection, currentEnemyAttackSpeed * Time.deltaTime);
 
             enemyCurrentTargets[attackingEnemy] = player.transform.position; // Update target for gizmo
@@ -371,7 +397,7 @@ public class EnemySpawnerAndController : MonoBehaviour
 
         // Apply damage to the player
         UnityEngine.Debug.Log($"Flier {attackingEnemy.name} reached attack success distance and hit the player.");
-        PlayerHealth playerHealth = player.GetComponent<PlayerHealth>();
+        PlayerHealth playerHealth = player.GetComponent<PlayerHealth>(); // Assuming PlayerHealth script exists on player
         if (playerHealth != null)
         {
             playerHealth.TakeDamage(damageAmount);
@@ -379,27 +405,50 @@ public class EnemySpawnerAndController : MonoBehaviour
         }
         else
         {
-            UnityEngine.Debug.LogWarning($"Flier {attackingEnemy.name} could not find PlayerHealth on the player.");
+            UnityEngine.Debug.LogWarning($"Flier {attackingEnemy.name} could not find PlayerHealth on the player. Please ensure it's attached.");
         }
 
-        // Set a new random target for the enemy to return to random flight
-        enemyCurrentTargets[attackingEnemy] = GetRandomPositionInColliderBounds();
+        // NEW: Wait for a short delay after attack *before* returning to flight
+        yield return new WaitForSeconds(attackReturnDelay);
 
-        yield return new WaitForSeconds(attackReturnDelay); // Wait before returning to flight
+        // Continue with returning to flight after the attack is successful
+        StartCoroutine(ReturnEnemyToFlight(attackingEnemy));
+    }
 
-        // If enemy became null or inactive during delay, reset glow and exit
-        if (attackingEnemy == null || !attackingEnemy.activeInHierarchy)
+    /// <summary>
+    /// Helper coroutine to gracefully return an enemy to its normal flight routine.
+    /// </summary>
+    /// <param name="enemy">The enemy GameObject to return to flight.</param>
+    IEnumerator ReturnEnemyToFlight(GameObject enemy)
+    {
+        if (enemy == null || !enemy.activeInHierarchy)
         {
-            SetEnemyGlow(attackingEnemy, false);
             yield break;
         }
 
+        SetEnemyGlow(enemy, false); // Ensure glow is off
+
+        // Set a new random target for the enemy to return to random flight
+        enemyCurrentTargets[enemy] = GetRandomPositionInColliderBounds();
+
+        // Ensure no other flight coroutine is running for this enemy
+        if (enemyFlightCoroutines.ContainsKey(enemy) && enemyFlightCoroutines[enemy] != null)
+        {
+            StopCoroutine(enemyFlightCoroutines[enemy]);
+            enemyFlightCoroutines.Remove(enemy);
+        }
+
         // Restart the flight coroutine for the enemy
-        Coroutine newFlightCoroutine = StartCoroutine(FlyAround(attackingEnemy));
-        enemyFlightCoroutines.Add(attackingEnemy, newFlightCoroutine);
+        Coroutine newFlightCoroutine = StartCoroutine(FlyAround(enemy));
+        enemyFlightCoroutines.Add(enemy, newFlightCoroutine);
 
         // Add the enemy back to the funnelCompletedEnemies set, ready for next attack cycle
-        funnelCompletedEnemies.Add(attackingEnemy);
+        // Only add if it's not already there (prevents duplicates)
+        if (!funnelCompletedEnemies.Contains(enemy))
+        {
+            funnelCompletedEnemies.Add(enemy);
+        }
+        UnityEngine.Debug.Log($"Enemy {enemy.name} is returning to random flight.");
     }
 
     /// <summary>
