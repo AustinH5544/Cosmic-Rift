@@ -15,9 +15,7 @@ public class PlayerHealth : MonoBehaviour
     public void TakeDamage(int damageAmount)
     {
         if (damageAmount < 0) return; // Prevent negative damage
-        currentHealth = Mathf.Max(0, currentHealth - damageAmount); // Reduce health, clamp to 0
-        Debug.Log($"Player took {damageAmount} damage. Current Health: {currentHealth}");
-
+       
            if (currentHealth <= 0)
             {
             Die();
@@ -25,7 +23,11 @@ public class PlayerHealth : MonoBehaviour
             else
             {
                 if (!isInvulnerable)
+                {  
+                    currentHealth = Mathf.Max(0, currentHealth - damageAmount); // Reduce health, clamp to 0
+                    Debug.Log($"Player took {damageAmount} damage. Current Health: {currentHealth}");
                     StartCoroutine(BecomeTemporarilyInvulnerable());
+                }
             }
     }
 
