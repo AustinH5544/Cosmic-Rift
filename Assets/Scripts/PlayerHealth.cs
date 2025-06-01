@@ -9,6 +9,7 @@ public class PlayerHealth : MonoBehaviour
     public GameManagerMain gameManager; // Reference to GameManagerMain for game over
 
     public CoverTransitionManagerMain coverTransitionManager; // Reference to CoverTransitionManagerMain
+    public CoverControllerMain coverController; // NEW: Reference to CoverControllerMain
 
     public float invulnerabilityDuration = .1f; // How long the player is invulnerable after taking damage
     private bool isInvulnerable = false;
@@ -35,6 +36,16 @@ public class PlayerHealth : MonoBehaviour
                 UnityEngine.Debug.LogError("PlayerHealth: CoverTransitionManagerMain not found. Player damage will not be disabled during transitions.");
             }
         }
+
+        // NEW: Try to find CoverControllerMain if not assigned in Inspector
+        if (coverController == null)
+        {
+            coverController = FindObjectOfType<CoverControllerMain>();
+            if (coverController == null)
+            {
+                UnityEngine.Debug.LogError("PlayerHealth: CoverControllerMain not found. Player damage will not be disabled when in cover.");
+            }
+        }
     }
 
     void Update()
@@ -53,6 +64,13 @@ public class PlayerHealth : MonoBehaviour
         if (coverTransitionManager != null && !coverTransitionManager.IsInCombat)
         {
             UnityEngine.Debug.Log("Player is currently transitioning and cannot take damage.");
+            return;
+        }
+
+        // NEW: Prevent damage if the player is currently in cover
+        if (coverController != null && coverController.IsInCover())
+        {
+            UnityEngine.Debug.Log("Player is currently in cover and cannot take damage.");
             return;
         }
 
