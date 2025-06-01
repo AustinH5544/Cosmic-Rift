@@ -1671,6 +1671,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: P_rsg_military_sandbox_01 (1)
       objectReference: {fileID: 0}
+    - target: {fileID: 3596656072291603221, guid: ad60952aa4069084a80ce6fe6829d19e, type: 3}
+      propertyPath: m_TagString
+      value: Barrier
+      objectReference: {fileID: 0}
     - target: {fileID: 4224995513277155759, guid: ad60952aa4069084a80ce6fe6829d19e, type: 3}
       propertyPath: m_LocalScale.x
       value: 0.8
@@ -4701,12 +4705,12 @@ BoxCollider:
     serializedVersion: 2
     m_Bits: 0
   m_LayerOverridePriority: 0
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1, y: 1.7657344, z: 6.0939407}
-  m_Center: {x: 0, y: -0.10190141, z: -0.29307175}
+  m_Size: {x: 1, y: 1.8469322, z: 6.0939407}
+  m_Center: {x: 0, y: -0.061302543, z: -0.29307175}
 --- !u!54 &1699727646
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -6635,6 +6639,10 @@ PrefabInstance:
     - target: {fileID: 6119963299933095096, guid: 21936048e885df24bbc3aee56c187862, type: 3}
       propertyPath: m_Name
       value: CoverControllerMain
+      objectReference: {fileID: 0}
+    - target: {fileID: 6119963299933095096, guid: 21936048e885df24bbc3aee56c187862, type: 3}
+      propertyPath: m_TagString
+      value: Cover
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
