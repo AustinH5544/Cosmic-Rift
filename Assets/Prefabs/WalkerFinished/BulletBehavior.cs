@@ -11,7 +11,7 @@ public class BulletBehavior : MonoBehaviour
     private float glowStartTime;
     private bool hasHit = false;
 
-    public int damageAmount = 10; // Default damage, ensure PlayerHealth.TakeDamage accepts a float
+    public int damageAmount = 5; // Default damage, ensure PlayerHealth.TakeDamage accepts a float
 
     void Start()
     {
@@ -124,6 +124,8 @@ public class BulletBehavior : MonoBehaviour
             if (bulletRenderer != null)
             {
                 glowStartTime = Time.time;
+                damageAmount = 20;
+
             }
 
             // Optionally disable the collider to prevent further triggers

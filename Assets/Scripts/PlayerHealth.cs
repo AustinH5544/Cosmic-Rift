@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Diagnostics;
 using UnityEngine;
 
 public class PlayerHealth : MonoBehaviour
@@ -6,10 +7,13 @@ public class PlayerHealth : MonoBehaviour
     public int maxHealth = 100; // Maximum health of the player
     private int currentHealth;  // Current health of the player
     public GameManagerMain gameManager; // Reference to GameManagerMain for game over
+
+    public CoverTransitionManagerMain coverTransitionManager; // Reference to CoverTransitionManagerMain
+
     public float invulnerabilityDuration = .1f; // How long the player is invulnerable after taking damage
     private bool isInvulnerable = false;
 
-    // NEW: Audio settings for damage sound
+    // Audio settings for damage sound
     [Header("Audio Settings")]
     public AudioClip damageSound; // Sound to play when player takes damage
     private AudioSource audioSource; // AudioSource to play the sound
@@ -18,9 +22,19 @@ public class PlayerHealth : MonoBehaviour
     {
         currentHealth = maxHealth; // Initialize health to max
 
-        // NEW: Initialize AudioSource for damage sound
+        // Initialize AudioSource for damage sound
         audioSource = gameObject.AddComponent<AudioSource>();
         audioSource.volume = PlayerPrefs.GetFloat("SFXVolume", 1f);
+
+        // Try to find CoverTransitionManagerMain if not assigned in Inspector
+        if (coverTransitionManager == null)
+        {
+            coverTransitionManager = FindObjectOfType<CoverTransitionManagerMain>();
+            if (coverTransitionManager == null)
+            {
+                UnityEngine.Debug.LogError("PlayerHealth: CoverTransitionManagerMain not found. Player damage will not be disabled during transitions.");
+            }
+        }
     }
 
     void Update()
@@ -35,22 +49,30 @@ public class PlayerHealth : MonoBehaviour
     {
         if (damageAmount < 0) return; // Prevent negative damage
 
-        if (currentHealth <= 0)
+        // Prevent damage if not in combat (i.e., transitioning between cover points)
+        if (coverTransitionManager != null && !coverTransitionManager.IsInCombat)
         {
-            Die();
+            UnityEngine.Debug.Log("Player is currently transitioning and cannot take damage.");
+            return;
         }
-        else
+
+        if (!isInvulnerable)
         {
-            if (!isInvulnerable)
+            currentHealth = Mathf.Max(0, currentHealth - damageAmount); // Reduce health, clamp to 0
+            UnityEngine.Debug.Log($"Player took {damageAmount} damage. Current Health: {currentHealth}");
+
+            if (audioSource != null && damageSound != null)
             {
-                currentHealth = Mathf.Max(0, currentHealth - damageAmount); // Reduce health, clamp to 0
-                UnityEngine.Debug.Log($"Player took {damageAmount} damage. Current Health: {currentHealth}");
+                audioSource.PlayOneShot(damageSound);
+            }
 
-                if (audioSource != null && damageSound != null)
-                {
-                    audioSource.PlayOneShot(damageSound);
-                }
-
+            // Check for death AFTER applying damage and invulnerability check
+            if (currentHealth <= 0)
+            {
+                Die();
+            }
+            else
+            {
                 StartCoroutine(BecomeTemporarilyInvulnerable());
             }
         }
@@ -58,11 +80,12 @@ public class PlayerHealth : MonoBehaviour
 
     void Die()
     {
-        Debug.Log("Player has died!");
+        UnityEngine.Debug.Log("Player has died!");
         if (gameManager != null)
         {
             gameManager.ShowGameOverScreen(); // Trigger game over screen
         }
+        // Optionally, disable player input or other components here
     }
 
     public float GetHealthPercentage()
@@ -73,12 +96,12 @@ public class PlayerHealth : MonoBehaviour
     private IEnumerator BecomeTemporarilyInvulnerable()
     {
         isInvulnerable = true;
-        Debug.Log("Player became invulnerable for " + invulnerabilityDuration + " seconds.");
+        UnityEngine.Debug.Log("Player became invulnerable for " + invulnerabilityDuration + " seconds.");
 
         // Wait for the duration of invulnerability
         yield return new WaitForSeconds(invulnerabilityDuration);
 
         isInvulnerable = false; // Reset the flag
-        Debug.Log("Player is no longer invulnerable.");
+        UnityEngine.Debug.Log("Player is no longer invulnerable.");
     }
 }

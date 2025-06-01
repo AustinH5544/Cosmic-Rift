@@ -22,6 +22,7 @@ public class ShootingEnemy : MonoBehaviour
     public float maxHitChance = 90f;
     [Tooltip("Layers that should block the enemy's line of sight (e.g., Environment, Walls).")]
     public LayerMask lineOfSightObstacleLayer;
+    // REMOVED: public float barrierHitChanceLossMultiplier = 1.5f; // This is no longer needed
 
     [Header("Dynamic Miss Offset Calculation")]
     [Tooltip("Extra padding added to player's size + bullet's size to ensure misses don't hit.")]
@@ -33,7 +34,7 @@ public class ShootingEnemy : MonoBehaviour
     public float impactGlowDuration = 0.2f;
     public Color impactGlowColor = UnityEngine.Color.red;
 
-    // NEW: Audio settings for shooting sound
+    // Audio settings for shooting sound
     [Header("Audio Settings")]
     public AudioClip shootSound; // Sound to play when Walker fires
     private AudioSource audioSource; // AudioSource to play the sound
@@ -57,32 +58,25 @@ public class ShootingEnemy : MonoBehaviour
     {
         currentHitChance = 0f; // Start with minimum hit chance
 
-        // Get the player's main collider component at the start of the game
-        // Using Camera.main.transform as the player target for consistency with previous discussions.
         if (UnityEngine.Camera.main != null)
         {
             playerTransform = UnityEngine.Camera.main.transform;
             UnityEngine.Debug.Log($"ShootingEnemy: Player Transform found as '{playerTransform.name}' (Main Camera).", this);
-
-            // Try to find the player's main collider on the camera or its "Sphere" child
             InitializePlayerCollider();
         }
         else
         {
             UnityEngine.Debug.LogError("ShootingEnemy: No 'Main Camera' found! Ensure your main camera is tagged 'MainCamera' in the Inspector. This enemy cannot function without a player target.", this);
-            enabled = false; // Disable this script if no player is found
+            enabled = false;
             return;
         }
 
-        // NEW: Initialize AudioSource for shooting sound
         audioSource = gameObject.AddComponent<AudioSource>();
         audioSource.volume = PlayerPrefs.GetFloat("SFXVolume", 1f);
 
-        // Calculate dynamic miss offsets once playerMainCollider is set
         CalculateDynamicMissOffsets();
     }
 
-    // Encapsulates the logic for finding the player's primary collider
     private void InitializePlayerCollider()
     {
         if (playerTransform == null)
@@ -91,7 +85,6 @@ public class ShootingEnemy : MonoBehaviour
             return;
         }
 
-        // Option 1: Try to find a specific child GameObject named "Sphere"
         Transform playerHitboxChild = playerTransform.Find("Sphere");
 
         if (playerHitboxChild != null)
@@ -107,7 +100,6 @@ public class ShootingEnemy : MonoBehaviour
             }
         }
 
-        // Option 2: Fallback to getting the collider directly from the playerTransform (Camera.main) itself
         if (playerMainCollider == null)
         {
             playerMainCollider = playerTransform.GetComponent<UnityEngine.Collider>();
@@ -122,15 +114,11 @@ public class ShootingEnemy : MonoBehaviour
         }
     }
 
-    // Encapsulates dynamic miss offset calculation
     private void CalculateDynamicMissOffsets()
     {
         if (playerMainCollider != null && bulletPrefab != null)
         {
-            // Get player's horizontal "radius" (half of its widest XZ extent)
             float playerHorizontalRadius = Mathf.Max(playerMainCollider.bounds.extents.x, playerMainCollider.bounds.extents.z);
-
-            // Get bullet's effective radius from its collider
             float bulletRadius = 0f;
             Collider bulletCollider = bulletPrefab.GetComponent<Collider>();
             if (bulletCollider != null)
@@ -138,11 +126,9 @@ public class ShootingEnemy : MonoBehaviour
                 bulletRadius = Mathf.Max(bulletCollider.bounds.extents.x, bulletCollider.bounds.extents.z);
             }
 
-            // Calculate minimum miss offset: player horizontal radius + bullet radius + buffer
             _calculatedMissOffsetMin = playerHorizontalRadius + bulletRadius + missBuffer;
-            _calculatedMissOffsetMin = Mathf.Max(_calculatedMissOffsetMin, 0.1f); // Ensure a small practical minimum
+            _calculatedMissOffsetMin = Mathf.Max(_calculatedMissOffsetMin, 0.1f);
 
-            // Calculate maximum miss offset: min offset * multiplier
             _calculatedMissOffsetMax = _calculatedMissOffsetMin * missRangeMultiplier;
 
             UnityEngine.Debug.Log($"ShootingEnemy: Calculated miss offsets: Min = {_calculatedMissOffsetMin:F2}, Max = {_calculatedMissOffsetMax:F2}. (Player R: {playerHorizontalRadius:F2}, Bullet R: {bulletRadius:F2})", this);
@@ -150,7 +136,6 @@ public class ShootingEnemy : MonoBehaviour
         else
         {
             UnityEngine.Debug.LogWarning("ShootingEnemy: Cannot calculate dynamic miss offsets. Ensure Main Camera has a Collider (or a 'Sphere' child with one) and BulletPrefab has a Collider. Using default miss offsets.", this);
-            // Fallback to sensible defaults if calculation fails
             _calculatedMissOffsetMin = 1.0f;
             _calculatedMissOffsetMax = 3.0f;
         }
@@ -158,7 +143,6 @@ public class ShootingEnemy : MonoBehaviour
 
     void Update()
     {
-        // NEW: Update SFX volume based on PlayerPrefs
         if (audioSource != null)
         {
             audioSource.volume = PlayerPrefs.GetFloat("SFXVolume", 1f);
@@ -177,7 +161,6 @@ public class ShootingEnemy : MonoBehaviour
         }
         else
         {
-            // Debugging feedback if a critical reference goes missing during runtime
             if (playerTransform == null)
             {
                 UnityEngine.Debug.LogWarning("ShootingEnemy: Player Transform (Main Camera) is missing! Cannot operate. Has the Main Camera been destroyed or untagged?", this);
@@ -189,96 +172,96 @@ public class ShootingEnemy : MonoBehaviour
         }
     }
 
+    // Enum to describe line of sight status
+    private enum LineOfSightStatus
+    {
+        Clear,
+        Obstructed, // Covers both "Barrier" and "FullyObstructed" cases now
+    }
+
+    /// <summary>
+    /// Updates the current hit chance based on line of sight to the player.
+    /// The hit chance is lost at a standard rate if sight is obstructed.
+    /// </summary>
     void UpdateHitChance()
     {
-        bool canSeePlayer = CheckLineOfSight();
+        LineOfSightStatus sightStatus = GetLineOfSightStatus();
 
-        if (canSeePlayer)
+        if (sightStatus == LineOfSightStatus.Clear)
         {
+            // Player is clearly visible, gain hit chance
             currentHitChance += hitChanceGainRate * UnityEngine.Time.deltaTime;
         }
-        else
+        else // LineOfSightStatus.Obstructed
         {
+            // Player is obstructed by a barrier or something else, lose hit chance at the standard rate
             currentHitChance -= hitChanceLossRate * UnityEngine.Time.deltaTime;
         }
 
         currentHitChance = UnityEngine.Mathf.Clamp(currentHitChance, 0f, maxHitChance);
     }
 
-    bool CheckLineOfSight()
+    /// <summary>
+    /// Checks the line of sight to the player and determines if it's clear or obstructed.
+    /// Obstructed includes both "Barrier" and other full obstacles.
+    /// </summary>
+    /// <returns>A LineOfSightStatus enum indicating the visibility.</returns>
+    private LineOfSightStatus GetLineOfSightStatus()
     {
-        if (playerMainCollider == null) return false;
+        if (playerMainCollider == null)
+        {
+            return LineOfSightStatus.Obstructed; // No player collider, so considered obstructed
+        }
 
-        // Use shootingPoint.position as the source of the line of sight check
         UnityEngine.Vector3 rayOrigin = shootingPoint.position;
-
-        // Target for raycast is the center of the player's main collider for accuracy
         UnityEngine.Vector3 rayTarget = playerMainCollider.bounds.center;
-
         UnityEngine.Vector3 rayDirection = (rayTarget - rayOrigin).normalized;
         float rayDistance = UnityEngine.Vector3.Distance(rayOrigin, rayTarget);
 
         UnityEngine.RaycastHit hit;
-        // Perform a raycast, ignoring hits with the enemy's own colliders, and only considering obstacles
-        // Add a small offset to rayDistance to ensure it doesn't just hit the player's *surface* and assume no obstacle
+        // Perform a raycast against the obstacle layer mask
         if (UnityEngine.Physics.Raycast(rayOrigin, rayDirection, out hit, rayDistance + 0.1f, lineOfSightObstacleLayer))
         {
-            // If the ray hits something, check if it's the player's collider (or a child of the player's transform)
-            return hit.collider.transform == playerMainCollider.transform || hit.collider.transform.IsChildOf(playerTransform);
+            // If the ray hits something, check if it's the Player.
+            // If it hits anything else (including "Barrier"), it's considered obstructed.
+            if (hit.collider.CompareTag("Player"))
+            {
+                return LineOfSightStatus.Clear;
+            }
+            else
+            {
+                return LineOfSightStatus.Obstructed;
+            }
         }
-        // If the ray doesn't hit anything in the obstacle layer, line of sight is clear
-        return true;
+
+        // If the ray didn't hit anything in the obstacle layer, line of sight is clear.
+        return LineOfSightStatus.Clear;
     }
 
     // --- Using your provided RotateTowardsPlayer method ---
     void RotateTowardsPlayer()
     {
-        // 1. Calculate the horizontal direction from the shootingPoint to the player.
-        // This ensures the enemy's body rotates to horizontally align the muzzle.
         UnityEngine.Vector3 directionToPlayerHorizontal = playerTransform.position - shootingPoint.position;
-        directionToPlayerHorizontal.y = 0; // Ignore vertical difference for body rotation
+        directionToPlayerHorizontal.y = 0;
         directionToPlayerHorizontal.Normalize();
 
-        if (directionToPlayerHorizontal == UnityEngine.Vector3.zero) return; // Prevent errors if target is at the same horizontal position
+        if (directionToPlayerHorizontal == UnityEngine.Vector3.zero) return;
 
-        // 2. Calculate the desired world rotation for the shootingPoint if it were pointing directly at the player horizontally.
         UnityEngine.Quaternion desiredShootingPointWorldRot = UnityEngine.Quaternion.LookRotation(directionToPlayerHorizontal);
-
-        // 3. Find the current local rotation of the shootingPoint relative to its parent (the enemy's body).
-        // This tells us how the shootingPoint is oriented *within* the enemy's hierarchy.
         UnityEngine.Quaternion currentShootingPointToParentRot = UnityEngine.Quaternion.Inverse(transform.rotation) * shootingPoint.rotation;
-
-        // 4. Calculate the target rotation for the enemy's main body (transform.rotation).
-        // This is done by taking the desired world rotation for the shootingPoint
-        // and "subtracting" the shootingPoint's local offset rotation.
         UnityEngine.Quaternion targetEnemyRotation = desiredShootingPointWorldRot * UnityEngine.Quaternion.Inverse(currentShootingPointToParentRot);
 
-        // 5. Constrain the enemy's body rotation to only the Y-axis (horizontal).
-        // This removes any pitch (X) or roll (Z) components from the enemy's main body.
         targetEnemyRotation.x = 0;
         targetEnemyRotation.z = 0;
-        targetEnemyRotation.Normalize(); // Re-normalize after setting X/Z to 0 for a valid quaternion
+        targetEnemyRotation.Normalize();
 
-        // Smoothly interpolate the enemy's main body rotation towards the target.
         transform.rotation = UnityEngine.Quaternion.Slerp(transform.rotation, targetEnemyRotation, UnityEngine.Time.deltaTime * rotationSpeed);
 
         // --- DEBUG DRAW RAYS ---
-        // Visualize the enemy's current forward (RED) - this shows the main body's horizontal orientation
         UnityEngine.Debug.DrawRay(transform.position, transform.forward * 5f, UnityEngine.Color.red, 0.1f);
-
-        // Determine the actual 3D target point for the bullet's aim.
-        // This is the player's full 3D position (collider center or transform position).
         UnityEngine.Vector3 actualAimTarget = (playerMainCollider != null) ? playerMainCollider.bounds.center : playerTransform.position;
-
-        // Calculate the actual 3D shooting direction from the muzzle to the player's 3D target.
-        // This will be the direction the bullet actually travels.
         UnityEngine.Vector3 actualShootDirection = (actualAimTarget - shootingPoint.position).normalized;
-
-        // Visualize the calculated actual shooting direction from the muzzle (BLUE).
-        // This ray shows the precise line from the gun to the player, including vertical aiming.
         UnityEngine.Debug.DrawRay(shootingPoint.position, actualShootDirection * 5f, UnityEngine.Color.blue, 0.1f);
-
-        // Visualize the player's 3D target point (GREEN)
         UnityEngine.Debug.DrawRay(actualAimTarget, UnityEngine.Vector3.up * 1f, UnityEngine.Color.green, 0.1f);
         // --- END DEBUG DRAW RAYS ---
     }
@@ -289,7 +272,6 @@ public class ShootingEnemy : MonoBehaviour
         float roll = UnityEngine.Random.value * 100f;
         bool isHit = (roll <= currentHitChance);
 
-        // Define the base target for aiming. This is where the bullet is *intended* to go.
         UnityEngine.Vector3 baseAimTarget;
         if (playerMainCollider != null)
         {
@@ -304,34 +286,27 @@ public class ShootingEnemy : MonoBehaviour
         {
             targetShootPosition = baseAimTarget;
         }
-        else // It's a miss
+        else
         {
-            // Use the dynamically calculated min/max offsets
             float missDistance = UnityEngine.Random.Range(_calculatedMissOffsetMin, _calculatedMissOffsetMax);
-            float missAngle = UnityEngine.Random.Range(0f, 360f); // Full circle random miss around the player's horizontal plane
+            float missAngle = UnityEngine.Random.Range(0f, 360f);
 
             float offsetX = missDistance * UnityEngine.Mathf.Cos(missAngle * UnityEngine.Mathf.Deg2Rad);
             float offsetZ = missDistance * UnityEngine.Mathf.Sin(missAngle * UnityEngine.Mathf.Deg2Rad);
 
-            // Apply the offset to the base aim target's horizontal plane,
-            // then combine with its original Y for the vertical aiming component.
             targetShootPosition = new UnityEngine.Vector3(
                 baseAimTarget.x + offsetX,
-                baseAimTarget.y, // Maintain original vertical target
+                baseAimTarget.y,
                 baseAimTarget.z + offsetZ
             );
         }
 
-        // Calculate the normalized direction from the shooting point to the final target position
-        // This direction will correctly include vertical aiming as needed.
         UnityEngine.Vector3 shootDirection = (targetShootPosition - shootingPoint.position).normalized;
 
         if (bulletPrefab != null)
         {
-            // *** IMPORTANT FIX: Set the bullet's initial rotation to face the shootDirection ***
             GameObject bullet = UnityEngine.Object.Instantiate(bulletPrefab, shootingPoint.position, UnityEngine.Quaternion.LookRotation(shootDirection));
 
-            // NEW: Play shooting sound when bullet is fired
             if (audioSource != null && shootSound != null)
             {
                 audioSource.PlayOneShot(shootSound);

@@ -1594,12 +1594,12 @@ MonoBehaviour:
   bulletPrefab: {fileID: 6770343624299816540, guid: c900c976801d20247b89346013d8928f, type: 3}
   playerTransform: {fileID: 5196001700668407209, guid: fb4ecebb642dfb245948a758c0b8ac46, type: 3}
   shootingPoint: {fileID: 27097039945108434}
-  fireRate: 1
-  bulletSpeed: 5
+  fireRate: 1.2
+  bulletSpeed: 7
   rotationSpeed: 5
   hitChanceGainRate: 1
   hitChanceLossRate: 5
-  maxHitChance: 15
+  maxHitChance: 25
   lineOfSightObstacleLayer:
     serializedVersion: 2
     m_Bits: 0
@@ -1609,7 +1609,7 @@ MonoBehaviour:
   impactGlowColor: {r: 1, g: 0, b: 0, a: 1}
   shootSound: {fileID: 8300000, guid: 1ae5bee01849faa44a8f17675e5c124b, type: 3}
   currentHitChance: 0
-  _calculatedMissOffsetMin: 1.5
+  _calculatedMissOffsetMin: 1.7
   _calculatedMissOffsetMax: 3
 --- !u!136 &8987633178320062214
 CapsuleCollider:
