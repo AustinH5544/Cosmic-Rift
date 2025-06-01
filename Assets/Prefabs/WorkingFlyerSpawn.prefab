@@ -184,6 +184,7 @@ MonoBehaviour:
   spawnDelay: 0.5
   spawnerDestroyDelay: 1
   playerCoverController: {fileID: 0}
+  biteSound: {fileID: 8300000, guid: 86bd243bf3c3f4b68aa50274ad83df90, type: 3}
 --- !u!65 &7950311899863053238
 BoxCollider:
   m_ObjectHideFlags: 0

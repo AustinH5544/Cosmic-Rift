@@ -79,6 +79,11 @@ public class EnemySpawnerAndController : MonoBehaviour
     // This MUST be assigned in the Inspector if your CoverControllerMain is not on the Main Camera.
     public CoverControllerMain playerCoverController;
 
+    // NEW: Audio settings for biting sound
+    [Header("Audio Settings")]
+    public AudioClip biteSound; // Sound to play when Flier deals damage
+    private AudioSource audioSource; // AudioSource to play the sound
+
     // List of currently spawned enemy GameObjects
     private List<GameObject> spawnedEnemies = new List<GameObject>();
     // Dictionary to store coroutines for each enemy's flight behavior
@@ -167,6 +172,10 @@ public class EnemySpawnerAndController : MonoBehaviour
             UnityEngine.Debug.Log("Player Cover Controller was manually assigned in the Inspector.");
         }
 
+        // NEW: Initialize AudioSource for biting sound
+        audioSource = gameObject.AddComponent<AudioSource>();
+        audioSource.volume = PlayerPrefs.GetFloat("SFXVolume", 1f);
+
         // --- Game Logic Start ---
 
         // Start the sequential spawning process
@@ -177,6 +186,12 @@ public class EnemySpawnerAndController : MonoBehaviour
 
     void Update()
     {
+        // NEW: Update SFX volume based on PlayerPrefs
+        if (audioSource != null)
+        {
+            audioSource.volume = PlayerPrefs.GetFloat("SFXVolume", 1f);
+        }
+
         // Check if it's time for an attack and if there are enemies ready to attack
         if (Time.time - lastAttackTime > attackCooldown && funnelCompletedEnemies.Count > 0)
         {
@@ -425,6 +440,12 @@ public class EnemySpawnerAndController : MonoBehaviour
         {
             playerHealth.TakeDamage(damageAmount);
             UnityEngine.Debug.Log($"Flier {attackingEnemy.name} dealt {damageAmount} damage to the player.");
+
+            // NEW: Play the biting sound when damage is dealt
+            if (audioSource != null && biteSound != null)
+            {
+                audioSource.PlayOneShot(biteSound);
+            }
         }
         else
         {
