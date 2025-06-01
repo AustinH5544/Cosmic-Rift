@@ -30,7 +30,8 @@ public class CrosshairControllerMain : MonoBehaviour
     public LayerMask shootableLayers;
 
     private GameManagerMain gameManager;
-    private CoverTransitionManagerMain coverManager; // NEW: Added to directly access IsInCombat
+    private CoverTransitionManagerMain coverManager;
+    private CoverControllerMain coverController; // NEW: Reference to CoverControllerMain
 
     void Start()
     {
@@ -77,11 +78,18 @@ public class CrosshairControllerMain : MonoBehaviour
             UnityEngine.Debug.LogError("CrosshairControllerMain: GameManagerMain not found in the scene!");
         }
 
-        // NEW: Find the CoverTransitionManagerMain instance
+        // Find the CoverTransitionManagerMain instance
         coverManager = UnityEngine.Object.FindFirstObjectByType<CoverTransitionManagerMain>();
         if (coverManager == null)
         {
             UnityEngine.Debug.LogError("CrosshairControllerMain: CoverTransitionManagerMain not found in the scene!");
+        }
+
+        // NEW: Find the CoverControllerMain instance
+        coverController = UnityEngine.Object.FindFirstObjectByType<CoverControllerMain>();
+        if (coverController == null)
+        {
+            UnityEngine.Debug.LogError("CrosshairControllerMain: CoverControllerMain not found in the scene!");
         }
 
         UpdateUI(); // Initial UI update
@@ -214,12 +222,6 @@ public class CrosshairControllerMain : MonoBehaviour
         {
             audioSource.PlayOneShot(shootSound);
         }
-
-        // NO LONGER AUTO RELOAD HERE. The new update loop handles it.
-        // if (currentAmmo == 0)
-        // {
-        //     Reload();
-        // }
     }
 
     // Initiates the reload process
@@ -231,8 +233,6 @@ public class CrosshairControllerMain : MonoBehaviour
         UnityEngine.Debug.Log("Initiating Reload...");
         isReloading = true; // Set reloading flag to true
         reloadStartTime = Time.time; // Record reload start time
-        // Schedule FinishReload to be called after reloadTime seconds
-        // Invoke(nameof(FinishReload), reloadTime); // The Update loop now handles completion
 
         // Play the reload sound if available
         if (audioSource != null && reloadSound != null)
@@ -275,14 +275,17 @@ public class CrosshairControllerMain : MonoBehaviour
             }
         }
 
-        // Use the stored reference
+        // Use the stored reference for combat status
         bool inCombat = coverManager != null && coverManager.IsInCombat;
+
+        // NEW: Check if the player is in cover
+        bool inCover = coverController != null && coverController.IsInCover();
 
         // Check if there's ammo and not currently reloading
         bool canShootAmmo = currentAmmo > 0 && !isReloading;
 
-        // Can shoot only if in combat AND has ammo/not reloading
-        return inCombat && canShootAmmo;
+        // Can shoot only if in combat AND has ammo/not reloading AND NOT in cover
+        return inCombat && canShootAmmo && !inCover;
     }
 
     // Determines if the crosshair should be displayed
