@@ -99,6 +99,8 @@ public class EnemySpawnerAndController : MonoBehaviour
 
     void Start()
     {
+        // --- Validation and Assignment ---
+
         // Validate required assignments in the Inspector
         if (enemyPrefab == null)
         {
@@ -125,19 +127,11 @@ public class EnemySpawnerAndController : MonoBehaviour
             return;
         }
 
-        // Automatically assign the player if the Main Camera is tagged correctly
+        // Auto-assign player (Main Camera)
         if (Camera.main != null)
         {
             player = Camera.main.gameObject;
             UnityEngine.Debug.Log("Player automatically assigned to Main Camera.");
-
-            // WARNING: If playerCoverController is NOT assigned in the Inspector,
-            // and CoverControllerMain is not on the Main Camera, this will log a warning.
-            // Manual assignment in the Inspector is the recommended approach for this variable.
-            if (playerCoverController == null)
-            {
-                UnityEngine.Debug.LogWarning("Player Cover Controller is not assigned in the Inspector. Player cover status will not be checked for enemy attacks. Please drag the GameObject with CoverControllerMain into the 'Player Cover Controller' slot in the Inspector.");
-            }
         }
         else
         {
@@ -145,6 +139,35 @@ public class EnemySpawnerAndController : MonoBehaviour
             enabled = false;
             return;
         }
+
+        // NEW: Auto-assign PlayerCoverController by tag
+        if (playerCoverController == null)
+        {
+            GameObject coverObject = GameObject.FindWithTag("Cover");
+            if (coverObject != null)
+            {
+                playerCoverController = coverObject.GetComponent<CoverControllerMain>();
+                if (playerCoverController != null)
+                {
+                    UnityEngine.Debug.Log($"CoverControllerMain automatically assigned from object with tag 'Cover': {coverObject.name}");
+                }
+                else
+                {
+                    UnityEngine.Debug.LogWarning($"Object with tag 'Cover' found ({coverObject.name}), but it does not have a CoverControllerMain component. Player cover status will not be checked for enemy attacks.");
+                }
+            }
+            else
+            {
+                UnityEngine.Debug.LogWarning("No GameObject with tag 'Cover' found. Player cover status will not be checked for enemy attacks. Please ensure your CoverControllerMain is on an object tagged 'Cover' or assign it manually in the Inspector.");
+            }
+        }
+        else
+        {
+            // If playerCoverController was already assigned in the Inspector, log that.
+            UnityEngine.Debug.Log("Player Cover Controller was manually assigned in the Inspector.");
+        }
+
+        // --- Game Logic Start ---
 
         // Start the sequential spawning process
         StartCoroutine(SpawnEnemiesSequentially());
