@@ -597,7 +597,6 @@ GameObject:
   m_Component:
   - component: {fileID: 4821050947257117728}
   - component: {fileID: 2818160439285274852}
-  - component: {fileID: 3930970801561546325}
   m_Layer: 0
   m_Name: Rikka_IFO_spaceship_URP_N10_R_01
   m_TagString: Boss
@@ -636,18 +635,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   bossHP: 2
   rotationSpeed: 50
---- !u!114 &3930970801561546325
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6459477224669603180}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9a298b44aaff67c44a8dcecfb9addce0, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &6910838301805721413
 GameObject:
   m_ObjectHideFlags: 0
