@@ -75,11 +75,11 @@ PrefabInstance:
       objectReference: {fileID: 9140831002217021797, guid: f9d345695fa29544986194542bee28e5, type: 3}
     - target: {fileID: 1426274957828034293, guid: cb532f5c953222949bbdb8fdb558c103, type: 3}
       propertyPath: maxFlightHeightRatio
-      value: 0.749
+      value: 0.8
       objectReference: {fileID: 0}
     - target: {fileID: 1426274957828034293, guid: cb532f5c953222949bbdb8fdb558c103, type: 3}
       propertyPath: minFlightHeightRatio
-      value: 0.27
+      value: 0.2
       objectReference: {fileID: 0}
     - target: {fileID: 6244408584430303808, guid: cb532f5c953222949bbdb8fdb558c103, type: 3}
       propertyPath: m_LocalScale.x
@@ -140,6 +140,18 @@ PrefabInstance:
     - target: {fileID: 6455677362677650556, guid: cb532f5c953222949bbdb8fdb558c103, type: 3}
       propertyPath: m_TagString
       value: Spawner
+      objectReference: {fileID: 0}
+    - target: {fileID: 7430618793326438133, guid: cb532f5c953222949bbdb8fdb558c103, type: 3}
+      propertyPath: m_Size.x
+      value: 20
+      objectReference: {fileID: 0}
+    - target: {fileID: 7430618793326438133, guid: cb532f5c953222949bbdb8fdb558c103, type: 3}
+      propertyPath: m_Size.y
+      value: 15
+      objectReference: {fileID: 0}
+    - target: {fileID: 7430618793326438133, guid: cb532f5c953222949bbdb8fdb558c103, type: 3}
+      propertyPath: m_Size.z
+      value: 15
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
