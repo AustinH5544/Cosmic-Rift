@@ -3,9 +3,9 @@ README
 Thanks for playing our game. This is the ReadMe for Cosmic Rift.
 YOU HAVE about 4 Mins to save the world! Quickly destroy the alien armada. 
 
+LOGS: To unlock the logs, you must at least make it to the boss (You don't have to kill him).
 
 Devs: Austin, Chris, Leo
-
 
 Controls 
 	Uncover -Space-
