@@ -1533,6 +1533,7 @@ GameObject:
   - component: {fileID: 4677127525412762011}
   - component: {fileID: 8987633178320062214}
   - component: {fileID: 4627048007066994707}
+  - component: {fileID: -3779528145707597952}
   m_Layer: 0
   m_Name: SpaceManBugRifle
   m_TagString: Target
@@ -1603,7 +1604,8 @@ MonoBehaviour:
   missBuffer: 1
   missRangeMultiplier: 3
   impactGlowDuration: 0.5
-  impactGlowColor: {r: 1, g: 0, b: 0, a: 1}
+  hitGlowColor: {r: 1, g: 0, b: 0, a: 1}
+  missGlowColor: {r: 0, g: 0, b: 1, a: 1}
   shootSound: {fileID: 8300000, guid: 1ae5bee01849faa44a8f17675e5c124b, type: 3}
   currentHitChance: 0
   _calculatedMissOffsetMin: 1.7
@@ -1643,6 +1645,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9a298b44aaff67c44a8dcecfb9addce0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &-3779528145707597952
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4646944113990625408}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: accadd2fb511deb4e9af749e8bb7960b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  bloodGushEffectPrefab: {fileID: 3548588485384254792, guid: 2f9e7dc163581394da1e00b561eed65d, type: 3}
+  effectOffset: {x: 0, y: 1.2, z: 0}
 --- !u!1 &4793441042328756199
 GameObject:
   m_ObjectHideFlags: 0

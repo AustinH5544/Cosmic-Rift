@@ -1,6 +1,6 @@
 using System.Diagnostics;
 using UnityEngine;
-using static System.Net.Mime.MediaTypeNames;
+
 
 public class EnemyBloodGush : MonoBehaviour
 {
@@ -12,8 +12,10 @@ public class EnemyBloodGush : MonoBehaviour
 
     void OnDestroy()
     {
-        // Check if the application is quitting to prevent errors when stopping play mode
-        if (Application.isQuitting)
+        // Check if the object is being destroyed due to application quit or scene unload.
+        // This check effectively replaces the need for Application.isQuitting in OnDestroy.
+        // If the object is null (or the game object it belongs to), it means Unity is cleaning up.
+        if (this == null || !gameObject.scene.isLoaded) // Added check for scene being loaded for robustness
         {
             return;
         }
@@ -42,7 +44,7 @@ public class EnemyBloodGush : MonoBehaviour
         }
         else
         {
-            Debug.LogWarning("Blood Gush Effect Prefab is not assigned on " + gameObject.name);
+            UnityEngine.Debug.LogWarning("Blood Gush Effect Prefab is not assigned on " + gameObject.name);
         }
     }
 }

@@ -371,3 +371,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: accadd2fb511deb4e9af749e8bb7960b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  bloodGushEffectPrefab: {fileID: 3548588485384254792, guid: 2f9e7dc163581394da1e00b561eed65d, type: 3}
+  effectOffset: {x: 0, y: 0, z: 0}
