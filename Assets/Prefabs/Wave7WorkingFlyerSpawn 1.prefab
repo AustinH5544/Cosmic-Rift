@@ -121,7 +121,7 @@ GameObject:
   - component: {fileID: 7950311899863053238}
   - component: {fileID: 7104721498724647167}
   m_Layer: 6
-  m_Name: WorkingFlyerSpawn
+  m_Name: Wave7WorkingFlyerSpawn 1
   m_TagString: Spawner
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -204,8 +204,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 7, y: 3.0091228, z: 7}
-  m_Center: {x: 0, y: 2.3793406, z: 0}
+  m_Size: {x: 4.5986786, y: 2.9207535, z: 7}
+  m_Center: {x: 0.44742966, y: 2.4235253, z: 0}
 --- !u!114 &7104721498724647167
 MonoBehaviour:
   m_ObjectHideFlags: 0
