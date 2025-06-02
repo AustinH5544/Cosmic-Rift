@@ -283,17 +283,17 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   enemyPrefab: {fileID: 7943289880300879821, guid: 9b1a816b45b1a6a4abbc91b42e958663, type: 3}
   flightAreaCollider: {fileID: 60019568260695358}
-  numberOfEnemies: 5
+  numberOfEnemies: 8
   flySpeed: 3
   minFlightHeightRatio: 0.077
   maxFlightHeightRatio: 0.753
   attackSpeedMultiplier: 2
-  attackCooldown: 5
+  attackCooldown: 2
   player: {fileID: 2648194303276082455, guid: fb4ecebb642dfb245948a758c0b8ac46, type: 3}
   attackReturnDelay: 0.4
   attackRotationOffset: 0
   attackSuccessDistance: 1
-  damageAmount: 10
+  damageAmount: 25
   attackGlowColor: {r: 0.1598355, g: 0.26415092, b: 0.12709145, a: 1}
   glowIntensity: 0.2
   attackDirectionGizmoColor: {r: 1, g: 0, b: 1, a: 1}
@@ -307,7 +307,7 @@ MonoBehaviour:
   funnelSpawnPoint: {fileID: 7662831298167806390}
   funnelTargetPoint: {fileID: 3423306883206066625}
   spawnDelay: 0.5
-  spawnerDestroyDelay: 2
+  spawnerDestroyDelay: 1
   playerCoverController: {fileID: 0}
   biteSound: {fileID: 8300000, guid: 86bd243bf3c3f4b68aa50274ad83df90, type: 3}
 --- !u!65 &60019568260695358
