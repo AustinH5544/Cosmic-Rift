@@ -1598,16 +1598,16 @@ MonoBehaviour:
   fireRate: 1.2
   bulletSpeed: 7
   rotationSpeed: 5
-  hitChanceGainRate: 5
-  hitChanceLossRate: 10
-  maxHitChance: 75
+  hitChanceGainRate: 10
+  hitChanceLossRate: 15
+  maxHitChance: 100
   missBuffer: 1
   missRangeMultiplier: 3
   impactGlowDuration: 0.5
   hitGlowColor: {r: 1, g: 0, b: 0, a: 1}
   missGlowColor: {r: 0, g: 0, b: 1, a: 1}
   shootSound: {fileID: 8300000, guid: 1ae5bee01849faa44a8f17675e5c124b, type: 3}
-  currentHitChance: 0
+  currentHitChance: 5
   _calculatedMissOffsetMin: 1.7
   _calculatedMissOffsetMax: 3
 --- !u!136 &8987633178320062214
