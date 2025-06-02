@@ -5,6 +5,6 @@ public class SceneLoader : MonoBehaviour
 {
     public void LoadMainLevel()
     {
-        SceneManager.LoadScene("MainLevel"); // Make sure MainLevel is added in Build Settings
+        SceneManager.LoadScene("MainMenu"); // Make sure MainLevel is added in Build Settings
     }
 }

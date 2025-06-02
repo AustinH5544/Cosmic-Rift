@@ -393,13 +393,14 @@ MonoBehaviour:
 
 
     Your mission awaits. Hold the space bar to move
-    out of cover and click to shoot. Press R to reload when you''re low on ammo,
-    and Esc to access the menu at any time. Eliminate all enemies in each wave before
-    time runs out. When facing the boss, focus your fire on the red flux emitters
-    for maximum damage.
+    out of cover and click to shoot. Press R to reload when you''re low on ammo (or
+    it will auto reload when you are out of ammo), and Esc to access the menu at
+    any time. Eliminate all enemies in each wave before time runs out. When facing
+    the boss, focus your fire on the red flux emitters for maximum damage.
 
 
-    Press Start to begin your mission. '
+    Press
+    Start to go to the main menu. '
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
