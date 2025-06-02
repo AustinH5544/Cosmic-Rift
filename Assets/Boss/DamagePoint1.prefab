@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 1095317237608967771}
   - component: {fileID: 6521364158809075694}
   - component: {fileID: 4142558715779568240}
+  - component: {fileID: 655014819032559090}
   m_Layer: 0
   m_Name: DamagePoint1
   m_TagString: Target
@@ -121,3 +122,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0714715645f8d1b498e413008f631a8b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &655014819032559090
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1777120555471202212}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: accadd2fb511deb4e9af749e8bb7960b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  bloodGushEffectPrefab: {fileID: 3548588485384254792, guid: 2f9e7dc163581394da1e00b561eed65d, type: 3}
+  effectOffset: {x: 0, y: 0, z: 0}
