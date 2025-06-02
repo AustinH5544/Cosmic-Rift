@@ -266,7 +266,7 @@ public class MainMenu : MonoBehaviour
         GUIStyle titleStyle = new GUIStyle(GUI.skin.label);
         titleStyle.fontSize = 56;
         titleStyle.alignment = TextAnchor.MiddleCenter;
-        GUILayout.Label("Main Menu", titleStyle, GUILayout.Height(80));
+        GUILayout.Label("Cosmic Rift", titleStyle, GUILayout.Height(80));
 
         GUIStyle buttonStyle = new GUIStyle(GUI.skin.button);
         buttonStyle.fontSize = 28;
