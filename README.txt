@@ -1,6 +1,8 @@
 README
 
 Thanks for playing our game. This is the ReadMe for Cosmic Rift.
+YOU HAVE about 4 Mins to save the world! Quickly destroy the alien armada. 
+
 
 Devs: Austin, Chris, Leo
 
