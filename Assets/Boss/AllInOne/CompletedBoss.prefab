@@ -252,8 +252,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   childPrefab: {fileID: 5668885658457261225, guid: 543a95ced902ef64fbb37dd059e3c735, type: 3}
-  maxChildren: 8
-  spawnLimit: 8
+  maxChildren: 9
+  spawnLimit: 9
   spawnInterval: 4
   spawnLocalPosition: {x: 0, y: 0, z: 0}
   spawnLocalRotation: {x: 0, y: 0, z: 0, w: 1}

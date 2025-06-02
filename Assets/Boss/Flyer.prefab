@@ -282,7 +282,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   enemyPrefab: {fileID: 7943289880300879821, guid: 9b1a816b45b1a6a4abbc91b42e958663, type: 3}
   flightAreaCollider: {fileID: 60019568260695358}
-  numberOfEnemies: 3
+  numberOfEnemies: 4
   flySpeed: 3
   minFlightHeightRatio: 0.077
   maxFlightHeightRatio: 0.753
