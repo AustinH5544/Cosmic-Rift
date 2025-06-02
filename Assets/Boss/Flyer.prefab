@@ -287,7 +287,7 @@ MonoBehaviour:
   flySpeed: 3
   minFlightHeightRatio: 0.077
   maxFlightHeightRatio: 0.753
-  attackSpeedMultiplier: 2
+  attackSpeedMultiplier: 2.5
   attackCooldown: 2
   player: {fileID: 2648194303276082455, guid: fb4ecebb642dfb245948a758c0b8ac46, type: 3}
   attackReturnDelay: 0.4

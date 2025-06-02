@@ -159,11 +159,11 @@ MonoBehaviour:
   enemyPrefab: {fileID: 7943289880300879821, guid: 9b1a816b45b1a6a4abbc91b42e958663, type: 3}
   flightAreaCollider: {fileID: 7950311899863053238}
   numberOfEnemies: 5
-  flySpeed: 2
+  flySpeed: 3
   minFlightHeightRatio: 0.1
   maxFlightHeightRatio: 0.9
   attackSpeedMultiplier: 2.5
-  attackCooldown: 5
+  attackCooldown: 2
   player: {fileID: 2648194303276082455, guid: fb4ecebb642dfb245948a758c0b8ac46, type: 3}
   attackReturnDelay: 0.4
   attackRotationOffset: 0
