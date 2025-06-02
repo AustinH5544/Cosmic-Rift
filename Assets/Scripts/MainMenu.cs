@@ -9,7 +9,7 @@ public class MainMenu : MonoBehaviour
     public AudioSource backgroundMusic;
     private string[] crosshairColors = { "Red", "Green", "Blue" };
     private int selectedColorIndex = 0;
-    private Rect windowRect = new Rect(Screen.width / 2 - 400, Screen.height / 2 - 350, 800, 700);
+    private Rect windowRect = new Rect(Screen.width / 2 - 400, Screen.height / 2 - 450, 800, 900);
     private enum MenuState { MainMenu, StageSelection, Options, SoundSettings, ControlsSettings }
     private MenuState currentState = MenuState.MainMenu;
 
@@ -202,7 +202,7 @@ public class MainMenu : MonoBehaviour
 
     void DrawMenuWindow(int windowID)
     {
-        GUILayout.BeginArea(new Rect(40, 50, 720, 600));
+        GUILayout.BeginArea(new Rect(40, 50, 720, 800));
 
         switch (currentState)
         {
@@ -237,6 +237,8 @@ public class MainMenu : MonoBehaviour
 
         GUIStyle buttonStyle = new GUIStyle(GUI.skin.button);
         buttonStyle.fontSize = 28;
+
+        GUILayout.Space(50);
 
         if (GUILayout.Button("Play", buttonStyle, GUILayout.Height(90)))
         {
@@ -276,13 +278,6 @@ public class MainMenu : MonoBehaviour
 
     void DrawStageSelection()
     {
-        GUIStyle backButtonStyle = new GUIStyle(GUI.skin.button);
-        backButtonStyle.fontSize = 24;
-        if (GUI.Button(new Rect(10, 10, 100, 40), "Back", backButtonStyle))
-        {
-            currentState = MenuState.MainMenu;
-        }
-
         GUILayout.Space(20);
 
         GUIStyle titleStyle = new GUIStyle(GUI.skin.label);
@@ -292,6 +287,8 @@ public class MainMenu : MonoBehaviour
 
         GUIStyle buttonStyle = new GUIStyle(GUI.skin.button);
         buttonStyle.fontSize = 28;
+
+        GUILayout.Space(50);
 
         if (GUILayout.Button("Shootout", buttonStyle, GUILayout.Height(90)))
         {
@@ -307,27 +304,14 @@ public class MainMenu : MonoBehaviour
             SceneManager.LoadScene("MainLevel");
         }
 
-        if (GUILayout.Button("Infinite", buttonStyle, GUILayout.Height(90)))
+        if (GUILayout.Button("Back", buttonStyle, GUILayout.Height(90)))
         {
-            PlayerPrefs.SetString("SelectedStage", "Infinite");
-            PlayerPrefs.Save();
-            SceneManager.LoadScene("Game");
-        }
-
-        if (GUILayout.Button("Add Modifiers", buttonStyle, GUILayout.Height(90)))
-        {
+            currentState = MenuState.MainMenu;
         }
     }
 
     void DrawOptions()
     {
-        GUIStyle backButtonStyle = new GUIStyle(GUI.skin.button);
-        backButtonStyle.fontSize = 24;
-        if (GUI.Button(new Rect(10, 10, 100, 40), "Back", backButtonStyle))
-        {
-            currentState = MenuState.MainMenu;
-        }
-
         GUILayout.Space(20);
 
         GUIStyle titleStyle = new GUIStyle(GUI.skin.label);
@@ -337,6 +321,8 @@ public class MainMenu : MonoBehaviour
 
         GUIStyle buttonStyle = new GUIStyle(GUI.skin.button);
         buttonStyle.fontSize = 28;
+
+        GUILayout.Space(50);
 
         if (GUILayout.Button("Sound", buttonStyle, GUILayout.Height(90)))
         {
@@ -351,17 +337,15 @@ public class MainMenu : MonoBehaviour
         if (GUILayout.Button("Resolution", buttonStyle, GUILayout.Height(90)))
         {
         }
+
+        if (GUILayout.Button("Back", buttonStyle, GUILayout.Height(90)))
+        {
+            currentState = MenuState.MainMenu;
+        }
     }
 
     void DrawSoundSettings()
     {
-        GUIStyle backButtonStyle = new GUIStyle(GUI.skin.button);
-        backButtonStyle.fontSize = 24;
-        if (GUI.Button(new Rect(10, 10, 100, 40), "Back", backButtonStyle))
-        {
-            currentState = MenuState.Options;
-        }
-
         GUILayout.Space(20);
 
         GUIStyle titleStyle = new GUIStyle(GUI.skin.label);
@@ -380,7 +364,7 @@ public class MainMenu : MonoBehaviour
         GUIStyle buttonStyle = new GUIStyle(GUI.skin.button);
         buttonStyle.fontSize = 28;
 
-        GUILayout.Space(20);
+        GUILayout.Space(50);
 
         GUILayout.Label("Master Volume", labelStyle, GUILayout.Height(50));
         GUILayout.BeginHorizontal();
@@ -437,17 +421,15 @@ public class MainMenu : MonoBehaviour
             PlayerPrefs.SetFloat("SFXVolume", sfxVolume);
             PlayerPrefs.Save();
         }
+
+        if (GUILayout.Button("Back", buttonStyle, GUILayout.Height(90)))
+        {
+            currentState = MenuState.Options;
+        }
     }
 
     void DrawControlsSettings()
     {
-        GUIStyle backButtonStyle = new GUIStyle(GUI.skin.button);
-        backButtonStyle.fontSize = 24;
-        if (GUI.Button(new Rect(10, 10, 100, 40), "Back", backButtonStyle))
-        {
-            currentState = MenuState.Options;
-        }
-
         GUILayout.Space(20);
 
         GUIStyle titleStyle = new GUIStyle(GUI.skin.label);
@@ -462,7 +444,7 @@ public class MainMenu : MonoBehaviour
         GUIStyle buttonStyle = new GUIStyle(GUI.skin.button);
         buttonStyle.fontSize = 28;
 
-        GUILayout.Space(20);
+        GUILayout.Space(50);
 
         string shootLabel = isRebindingShoot ? "Press a key..." : $"Shoot: {shootKey}";
         if (!isRebindingLocked && GUILayout.Button(shootLabel, buttonStyle, GUILayout.Height(50)))
@@ -503,6 +485,11 @@ public class MainMenu : MonoBehaviour
             PlayerPrefs.SetString("CoverKey", coverKey.ToString());
             PlayerPrefs.SetString("PauseKey", pauseKey.ToString());
             PlayerPrefs.Save();
+        }
+
+        if (GUILayout.Button("Back", buttonStyle, GUILayout.Height(90)))
+        {
+            currentState = MenuState.Options;
         }
     }
 

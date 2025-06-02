@@ -19,20 +19,21 @@ public class GameManager : MonoBehaviour
     private KeyCode shootKey = KeyCode.Mouse0;
     private KeyCode coverKey = KeyCode.Space;
     private KeyCode pauseKey = KeyCode.Escape;
+    private KeyCode reloadKey = KeyCode.R;
 
     private bool isRebindingShoot = false;
     private bool isRebindingCover = false;
     private bool isRebindingPause = false;
+    private bool isRebindingReload = false;
+    private bool isRebindingLocked = false;
+    private float rebindingCooldown = 0f;
+    private bool justCancelledRebinding = false; // New flag to track cancellation frame
 
     private int[] highScores = new int[5];
     private float[] highAccuracies = new float[5];
     private string[] playerNames = new string[5];
     private string currentPlayerName = "Player";
     private bool nameSubmitted = false;
-
-    private enum WeaponType { Pistol, AutomaticRifle, Shotgun }
-    private WeaponType selectedWeapon = WeaponType.Pistol;
-    private string[] weaponNames = { "Pistol", "Automatic Rifle", "Shotgun" };
 
     private string[] crosshairColors = { "Red", "Green", "Blue" };
     private int selectedColorIndex;
@@ -46,6 +47,7 @@ public class GameManager : MonoBehaviour
         shootKey = (KeyCode)System.Enum.Parse(typeof(KeyCode), PlayerPrefs.GetString("ShootKey", KeyCode.Mouse0.ToString()));
         coverKey = (KeyCode)System.Enum.Parse(typeof(KeyCode), PlayerPrefs.GetString("CoverKey", KeyCode.Space.ToString()));
         pauseKey = (KeyCode)System.Enum.Parse(typeof(KeyCode), PlayerPrefs.GetString("PauseKey", KeyCode.Escape.ToString()));
+        reloadKey = (KeyCode)System.Enum.Parse(typeof(KeyCode), PlayerPrefs.GetString("ReloadKey", KeyCode.R.ToString()));
 
         for (int i = 0; i < 5; i++)
         {
@@ -55,10 +57,12 @@ public class GameManager : MonoBehaviour
         }
 
         selectedColorIndex = PlayerPrefs.GetInt("CrosshairColorIndex", 0);
+        UpdateCrosshairColor();
 
         if (crosshairController != null)
         {
             crosshairController.SetCanShoot(false);
+            crosshairController.SetReloadKey(reloadKey);
         }
         else
         {
@@ -86,12 +90,24 @@ public class GameManager : MonoBehaviour
 
     void Update()
     {
-        if (currentState == MenuState.None && Input.GetKeyDown(KeyCode.Escape))
+        // Prevent Pause menu from opening during rebinding or on the frame rebinding is cancelled
+        if (currentState == MenuState.None && Input.GetKeyDown(pauseKey) && !IsRebinding() && !justCancelledRebinding)
         {
+            Debug.Log("Showing Pause menu");
             ShowPauseMenu();
         }
 
-        if (isRebindingShoot || isRebindingCover || isRebindingPause)
+        if (rebindingCooldown > 0)
+        {
+            rebindingCooldown -= Time.deltaTime;
+            if (rebindingCooldown <= 0)
+            {
+                isRebindingLocked = false;
+                justCancelledRebinding = false; // Reset cancellation flag after cooldown
+            }
+        }
+
+        if (IsRebinding())
         {
             foreach (KeyCode keyCode in System.Enum.GetValues(typeof(KeyCode)))
             {
@@ -103,28 +119,55 @@ public class GameManager : MonoBehaviour
                         {
                             shootKey = keyCode;
                             isRebindingShoot = false;
+                            Debug.Log($"Shoot key rebound to: {shootKey}");
                         }
                         else if (isRebindingCover)
                         {
                             coverKey = keyCode;
                             isRebindingCover = false;
+                            Debug.Log($"Cover key rebound to: {coverKey}");
                         }
                         else if (isRebindingPause)
                         {
                             pauseKey = keyCode;
                             isRebindingPause = false;
+                            Debug.Log($"Pause key rebound to: {pauseKey}");
+                        }
+                        else if (isRebindingReload)
+                        {
+                            reloadKey = keyCode;
+                            isRebindingReload = false;
+                            if (crosshairController != null)
+                            {
+                                crosshairController.SetReloadKey(reloadKey);
+                                Debug.Log($"Reload key rebound to: {reloadKey}");
+                            }
+                            else
+                            {
+                                Debug.LogWarning("CrosshairController reference is null during reload key rebinding!");
+                            }
                         }
 
                         PlayerPrefs.SetString("ShootKey", shootKey.ToString());
                         PlayerPrefs.SetString("CoverKey", coverKey.ToString());
                         PlayerPrefs.SetString("PauseKey", pauseKey.ToString());
+                        PlayerPrefs.SetString("ReloadKey", reloadKey.ToString());
                         PlayerPrefs.Save();
+
+                        isRebindingLocked = true;
+                        rebindingCooldown = 0.2f;
                     }
                     else if (keyCode == KeyCode.Escape)
                     {
                         isRebindingShoot = false;
                         isRebindingCover = false;
                         isRebindingPause = false;
+                        isRebindingReload = false;
+
+                        isRebindingLocked = true;
+                        rebindingCooldown = 0.2f;
+                        justCancelledRebinding = true; // Set flag to prevent Pause menu on this frame
+                        Debug.Log("Rebinding cancelled with Escape key.");
                     }
                 }
             }
@@ -135,22 +178,43 @@ public class GameManager : MonoBehaviour
                 {
                     shootKey = KeyCode.Mouse0;
                     isRebindingShoot = false;
+                    Debug.Log($"Shoot key rebound to: {shootKey}");
                 }
                 else if (isRebindingCover)
                 {
                     coverKey = KeyCode.Mouse0;
                     isRebindingCover = false;
+                    Debug.Log($"Cover key rebound to: {coverKey}");
                 }
                 else if (isRebindingPause)
                 {
                     pauseKey = KeyCode.Mouse0;
                     isRebindingPause = false;
+                    Debug.Log($"Pause key rebound to: {pauseKey}");
+                }
+                else if (isRebindingReload)
+                {
+                    reloadKey = KeyCode.Mouse0;
+                    isRebindingReload = false;
+                    if (crosshairController != null)
+                    {
+                        crosshairController.SetReloadKey(reloadKey);
+                        Debug.Log($"Reload key rebound to: {reloadKey}");
+                    }
+                    else
+                    {
+                        Debug.LogWarning("CrosshairController reference is null during reload key rebinding!");
+                    }
                 }
 
                 PlayerPrefs.SetString("ShootKey", shootKey.ToString());
                 PlayerPrefs.SetString("CoverKey", coverKey.ToString());
                 PlayerPrefs.SetString("PauseKey", pauseKey.ToString());
+                PlayerPrefs.SetString("ReloadKey", reloadKey.ToString());
                 PlayerPrefs.Save();
+
+                isRebindingLocked = true;
+                rebindingCooldown = 0.2f;
             }
             else if (Input.GetMouseButtonDown(1))
             {
@@ -158,29 +222,50 @@ public class GameManager : MonoBehaviour
                 {
                     shootKey = KeyCode.Mouse1;
                     isRebindingShoot = false;
+                    Debug.Log($"Shoot key rebound to: {shootKey}");
                 }
                 else if (isRebindingCover)
                 {
                     coverKey = KeyCode.Mouse1;
                     isRebindingCover = false;
+                    Debug.Log($"Cover key rebound to: {coverKey}");
                 }
                 else if (isRebindingPause)
                 {
                     pauseKey = KeyCode.Mouse1;
                     isRebindingPause = false;
+                    Debug.Log($"Pause key rebound to: {pauseKey}");
+                }
+                else if (isRebindingReload)
+                {
+                    reloadKey = KeyCode.Mouse1;
+                    isRebindingReload = false;
+                    if (crosshairController != null)
+                    {
+                        crosshairController.SetReloadKey(reloadKey);
+                        Debug.Log($"Reload key rebound to: {reloadKey}");
+                    }
+                    else
+                    {
+                        Debug.LogWarning("CrosshairController reference is null during reload key rebinding!");
+                    }
                 }
 
                 PlayerPrefs.SetString("ShootKey", shootKey.ToString());
                 PlayerPrefs.SetString("CoverKey", coverKey.ToString());
                 PlayerPrefs.SetString("PauseKey", pauseKey.ToString());
+                PlayerPrefs.SetString("ReloadKey", reloadKey.ToString());
                 PlayerPrefs.Save();
+
+                isRebindingLocked = true;
+                rebindingCooldown = 0.2f;
             }
         }
     }
 
     void OnGUI()
     {
-        if (currentState != MenuState.None || currentState == MenuState.Welcome)
+        if (currentState != MenuState.None)
         {
             GUI.skin = guiSkin;
             windowRect = GUI.Window(0, windowRect, DrawMenuWindow, "");
@@ -189,7 +274,8 @@ public class GameManager : MonoBehaviour
 
     void DrawMenuWindow(int windowID)
     {
-        GUILayout.BeginArea(new Rect(40, 50, 920, 900));
+        // Adjusted BeginArea to fit content with even padding
+        GUILayout.BeginArea(new Rect(50, 50, 900, 900));
 
         switch (currentState)
         {
@@ -229,45 +315,23 @@ public class GameManager : MonoBehaviour
         titleStyle.wordWrap = true;
         GUILayout.Label("Welcome to the Shooting Range", titleStyle, GUILayout.Height(140));
 
-        GUILayout.Space(30);
-
         GUIStyle messageStyle = new GUIStyle(GUI.skin.label);
         messageStyle.fontSize = 36;
         messageStyle.alignment = TextAnchor.MiddleCenter;
         messageStyle.wordWrap = true;
-        GUILayout.Label("Shoot as many targets as possible in 60 seconds", messageStyle, GUILayout.Height(120));
-
-        GUILayout.Space(30);
 
         GUIStyle labelStyle = new GUIStyle(GUI.skin.label);
         labelStyle.fontSize = 36;
         labelStyle.alignment = TextAnchor.MiddleCenter;
 
-        GUILayout.BeginHorizontal();
-        GUILayout.FlexibleSpace();
-        GUILayout.Label("Choose Your Weapon:", labelStyle, GUILayout.Height(50));
-        GUILayout.FlexibleSpace();
-        GUILayout.EndHorizontal();
-
-        GUILayout.Space(20);
-
         GUIStyle buttonStyle = new GUIStyle(GUI.skin.button);
-        buttonStyle.fontSize = 32;
+        buttonStyle.fontSize = 36;
 
-        GUILayout.BeginHorizontal();
-        GUILayout.FlexibleSpace();
-        for (int i = 0; i < weaponNames.Length; i++)
-        {
-            if (GUILayout.Button(weaponNames[i], buttonStyle, GUILayout.Width(300), GUILayout.Height(80)))
-            {
-                selectedWeapon = (WeaponType)i;
-            }
-            GUILayout.Space(15);
-        }
-        GUILayout.FlexibleSpace();
-        GUILayout.EndHorizontal();
+        GUILayout.Space(50);
 
-        GUILayout.Space(40);
+        GUILayout.Label("Shoot as many targets as possible in 60 seconds", messageStyle, GUILayout.Height(120));
+
+        GUILayout.Space(30);
 
         GUILayout.BeginHorizontal();
         GUILayout.FlexibleSpace();
@@ -279,11 +343,12 @@ public class GameManager : MonoBehaviour
 
         GUILayout.BeginHorizontal();
         GUILayout.FlexibleSpace();
-        if (GUILayout.Button("Color: " + crosshairColors[selectedColorIndex], buttonStyle, GUILayout.Width(300), GUILayout.Height(80)))
+        if (GUILayout.Button("Color: " + crosshairColors[selectedColorIndex], buttonStyle, GUILayout.Width(600), GUILayout.Height(100)))
         {
             selectedColorIndex = (selectedColorIndex + 1) % crosshairColors.Length;
             PlayerPrefs.SetInt("CrosshairColorIndex", selectedColorIndex);
             PlayerPrefs.Save();
+            UpdateCrosshairColor();
         }
         GUILayout.FlexibleSpace();
         GUILayout.EndHorizontal();
@@ -292,7 +357,7 @@ public class GameManager : MonoBehaviour
 
         GUILayout.BeginHorizontal();
         GUILayout.FlexibleSpace();
-        if (GUILayout.Button("Start", buttonStyle, GUILayout.Width(300), GUILayout.Height(110)))
+        if (GUILayout.Button("Start", buttonStyle, GUILayout.Width(600), GUILayout.Height(130)))
         {
             currentState = MenuState.None;
             if (crosshairController != null)
@@ -307,6 +372,15 @@ public class GameManager : MonoBehaviour
             {
                 targetSpawner.enabled = true;
             }
+        }
+        GUILayout.FlexibleSpace();
+        GUILayout.EndHorizontal();
+
+        GUILayout.BeginHorizontal();
+        GUILayout.FlexibleSpace();
+        if (GUILayout.Button("Back", buttonStyle, GUILayout.Width(600), GUILayout.Height(130)))
+        {
+            SceneManager.LoadScene("MainMenu");
         }
         GUILayout.FlexibleSpace();
         GUILayout.EndHorizontal();
@@ -403,9 +477,13 @@ public class GameManager : MonoBehaviour
         GUILayout.Label("Paused", titleStyle, GUILayout.Height(80));
 
         GUIStyle buttonStyle = new GUIStyle(GUI.skin.button);
-        buttonStyle.fontSize = 28;
+        buttonStyle.fontSize = 36;
 
-        if (GUILayout.Button("Resume", buttonStyle, GUILayout.Height(90)))
+        GUILayout.Space(50);
+
+        GUILayout.BeginHorizontal();
+        GUILayout.FlexibleSpace();
+        if (GUILayout.Button("Resume", buttonStyle, GUILayout.Width(600), GUILayout.Height(130)))
         {
             Time.timeScale = 1f;
             if (crosshairController != null)
@@ -414,14 +492,22 @@ public class GameManager : MonoBehaviour
             }
             currentState = MenuState.None;
         }
+        GUILayout.FlexibleSpace();
+        GUILayout.EndHorizontal();
 
-        if (GUILayout.Button("Main Menu", buttonStyle, GUILayout.Height(90)))
+        GUILayout.BeginHorizontal();
+        GUILayout.FlexibleSpace();
+        if (GUILayout.Button("Main Menu", buttonStyle, GUILayout.Width(600), GUILayout.Height(130)))
         {
             Time.timeScale = 1f;
             SceneManager.LoadScene("MainMenu");
         }
+        GUILayout.FlexibleSpace();
+        GUILayout.EndHorizontal();
 
-        if (GUILayout.Button("Restart", buttonStyle, GUILayout.Height(90)))
+        GUILayout.BeginHorizontal();
+        GUILayout.FlexibleSpace();
+        if (GUILayout.Button("Restart", buttonStyle, GUILayout.Width(600), GUILayout.Height(130)))
         {
             if (crosshairController != null)
             {
@@ -430,22 +516,43 @@ public class GameManager : MonoBehaviour
             Time.timeScale = 1f;
             SceneManager.LoadScene("ShootingRange");
         }
+        GUILayout.FlexibleSpace();
+        GUILayout.EndHorizontal();
 
-        if (GUILayout.Button("Options", buttonStyle, GUILayout.Height(90)))
+        GUILayout.BeginHorizontal();
+        GUILayout.FlexibleSpace();
+        if (GUILayout.Button("Options", buttonStyle, GUILayout.Width(600), GUILayout.Height(130)))
         {
             currentState = MenuState.Options;
         }
+        GUILayout.FlexibleSpace();
+        GUILayout.EndHorizontal();
+
+        GUILayout.BeginHorizontal();
+        GUILayout.FlexibleSpace();
+        if (GUILayout.Button("Back", buttonStyle, GUILayout.Width(600), GUILayout.Height(130)))
+        {
+            Time.timeScale = 1f;
+            if (crosshairController != null)
+            {
+                crosshairController.SetCanShoot(false);
+            }
+            if (timer != null)
+            {
+                timer.enabled = false;
+            }
+            if (targetSpawner != null)
+            {
+                targetSpawner.enabled = false;
+            }
+            currentState = MenuState.Welcome;
+        }
+        GUILayout.FlexibleSpace();
+        GUILayout.EndHorizontal();
     }
 
     void DrawOptionsMenu()
     {
-        GUIStyle backButtonStyle = new GUIStyle(GUI.skin.button);
-        backButtonStyle.fontSize = 24;
-        if (GUI.Button(new Rect(10, 10, 100, 40), "Back", backButtonStyle))
-        {
-            currentState = (Time.timeScale == 0) ? MenuState.Pause : MenuState.GameOver;
-        }
-
         GUILayout.Space(20);
 
         GUIStyle titleStyle = new GUIStyle(GUI.skin.label);
@@ -454,32 +561,48 @@ public class GameManager : MonoBehaviour
         GUILayout.Label("Options", titleStyle, GUILayout.Height(80));
 
         GUIStyle buttonStyle = new GUIStyle(GUI.skin.button);
-        buttonStyle.fontSize = 28;
+        buttonStyle.fontSize = 36;
 
-        if (GUILayout.Button("Sound", buttonStyle, GUILayout.Height(90)))
+        GUILayout.Space(50);
+
+        GUILayout.BeginHorizontal();
+        GUILayout.FlexibleSpace();
+        if (GUILayout.Button("Sound", buttonStyle, GUILayout.Width(600), GUILayout.Height(130)))
         {
             currentState = MenuState.SoundSettings;
         }
+        GUILayout.FlexibleSpace();
+        GUILayout.EndHorizontal();
 
-        if (GUILayout.Button("Controls", buttonStyle, GUILayout.Height(90)))
+        GUILayout.BeginHorizontal();
+        GUILayout.FlexibleSpace();
+        if (GUILayout.Button("Controls", buttonStyle, GUILayout.Width(600), GUILayout.Height(130)))
         {
             currentState = MenuState.ControlsSettings;
         }
+        GUILayout.FlexibleSpace();
+        GUILayout.EndHorizontal();
 
-        if (GUILayout.Button("Resolution", buttonStyle, GUILayout.Height(90)))
+        GUILayout.BeginHorizontal();
+        GUILayout.FlexibleSpace();
+        if (GUILayout.Button("Resolution", buttonStyle, GUILayout.Width(600), GUILayout.Height(130)))
         {
         }
+        GUILayout.FlexibleSpace();
+        GUILayout.EndHorizontal();
+
+        GUILayout.BeginHorizontal();
+        GUILayout.FlexibleSpace();
+        if (GUILayout.Button("Back", buttonStyle, GUILayout.Width(600), GUILayout.Height(130)))
+        {
+            currentState = (Time.timeScale == 0) ? MenuState.Pause : MenuState.GameOver;
+        }
+        GUILayout.FlexibleSpace();
+        GUILayout.EndHorizontal();
     }
 
     void DrawSoundSettings()
     {
-        GUIStyle backButtonStyle = new GUIStyle(GUI.skin.button);
-        backButtonStyle.fontSize = 24;
-        if (GUI.Button(new Rect(10, 10, 100, 40), "Back", backButtonStyle))
-        {
-            currentState = MenuState.Options;
-        }
-
         GUILayout.Space(20);
 
         GUIStyle titleStyle = new GUIStyle(GUI.skin.label);
@@ -496,9 +619,9 @@ public class GameManager : MonoBehaviour
         percentageStyle.alignment = TextAnchor.MiddleCenter;
 
         GUIStyle buttonStyle = new GUIStyle(GUI.skin.button);
-        buttonStyle.fontSize = 28;
+        buttonStyle.fontSize = 36;
 
-        GUILayout.Space(20);
+        GUILayout.Space(50);
 
         GUILayout.Label("Master Volume", labelStyle, GUILayout.Height(50));
         GUILayout.BeginHorizontal();
@@ -536,24 +659,30 @@ public class GameManager : MonoBehaviour
 
         GUILayout.Space(40);
 
-        if (GUILayout.Button("Save", buttonStyle, GUILayout.Height(60)))
+        GUILayout.BeginHorizontal();
+        GUILayout.FlexibleSpace();
+        if (GUILayout.Button("Save", buttonStyle, GUILayout.Width(600), GUILayout.Height(130)))
         {
             PlayerPrefs.SetFloat("MasterVolume", masterVolume);
             PlayerPrefs.SetFloat("MusicVolume", musicVolume);
             PlayerPrefs.SetFloat("SFXVolume", sfxVolume);
             PlayerPrefs.Save();
         }
+        GUILayout.FlexibleSpace();
+        GUILayout.EndHorizontal();
+
+        GUILayout.BeginHorizontal();
+        GUILayout.FlexibleSpace();
+        if (GUILayout.Button("Back", buttonStyle, GUILayout.Width(600), GUILayout.Height(130)))
+        {
+            currentState = MenuState.Options;
+        }
+        GUILayout.FlexibleSpace();
+        GUILayout.EndHorizontal();
     }
 
     void DrawControlsSettings()
     {
-        GUIStyle backButtonStyle = new GUIStyle(GUI.skin.button);
-        backButtonStyle.fontSize = 24;
-        if (GUI.Button(new Rect(10, 10, 100, 40), "Back", backButtonStyle))
-        {
-            currentState = MenuState.Options;
-        }
-
         GUILayout.Space(20);
 
         GUIStyle titleStyle = new GUIStyle(GUI.skin.label);
@@ -566,66 +695,107 @@ public class GameManager : MonoBehaviour
         labelStyle.alignment = TextAnchor.MiddleCenter;
 
         GUIStyle buttonStyle = new GUIStyle(GUI.skin.button);
-        buttonStyle.fontSize = 28;
+        buttonStyle.fontSize = 36;
+        buttonStyle.padding = new RectOffset(20, 20, 15, 15);
 
-        GUILayout.Space(20);
+        GUILayout.Space(40);
 
+        GUILayout.BeginHorizontal();
+        GUILayout.FlexibleSpace();
         string shootLabel = isRebindingShoot ? "Press a key..." : $"Shoot: {shootKey}";
-        if (GUILayout.Button(shootLabel, buttonStyle, GUILayout.Height(50)))
+        if (!isRebindingLocked && GUILayout.Button(shootLabel, buttonStyle, GUILayout.Width(600), GUILayout.Height(100)))
         {
             isRebindingShoot = true;
             isRebindingCover = false;
             isRebindingPause = false;
+            isRebindingReload = false;
         }
+        GUILayout.FlexibleSpace();
+        GUILayout.EndHorizontal();
 
         GUILayout.Space(20);
 
+        GUILayout.BeginHorizontal();
+        GUILayout.FlexibleSpace();
         string coverLabel = isRebindingCover ? "Press a key..." : $"Cover: {coverKey}";
-        if (GUILayout.Button(coverLabel, buttonStyle, GUILayout.Height(50)))
+        if (!isRebindingLocked && GUILayout.Button(coverLabel, buttonStyle, GUILayout.Width(600), GUILayout.Height(100)))
         {
             isRebindingShoot = false;
             isRebindingCover = true;
             isRebindingPause = false;
+            isRebindingReload = false;
         }
+        GUILayout.FlexibleSpace();
+        GUILayout.EndHorizontal();
 
         GUILayout.Space(20);
 
+        GUILayout.BeginHorizontal();
+        GUILayout.FlexibleSpace();
         string pauseLabel = isRebindingPause ? "Press a key..." : $"Pause: {pauseKey}";
-        if (GUILayout.Button(pauseLabel, buttonStyle, GUILayout.Height(50)))
+        if (!isRebindingLocked && GUILayout.Button(pauseLabel, buttonStyle, GUILayout.Width(600), GUILayout.Height(100)))
         {
             isRebindingShoot = false;
             isRebindingCover = false;
             isRebindingPause = true;
+            isRebindingReload = false;
         }
+        GUILayout.FlexibleSpace();
+        GUILayout.EndHorizontal();
 
-        GUILayout.Space(40);
+        GUILayout.Space(20);
 
-        if (GUILayout.Button("Reset to Default", buttonStyle, GUILayout.Height(60)))
-        {
-            shootKey = KeyCode.Mouse0;
-            coverKey = KeyCode.Space;
-            pauseKey = KeyCode.Escape;
-            PlayerPrefs.SetString("ShootKey", shootKey.ToString());
-            PlayerPrefs.SetString("CoverKey", coverKey.ToString());
-            PlayerPrefs.SetString("PauseKey", pauseKey.ToString());
-            PlayerPrefs.Save();
-        }
-    }
-
-    void DrawLeaderboard()
-    {
-        GUIStyle backButtonStyle = new GUIStyle(GUI.skin.button);
-        backButtonStyle.fontSize = 36;
         GUILayout.BeginHorizontal();
         GUILayout.FlexibleSpace();
-        if (GUILayout.Button("Back", backButtonStyle, GUILayout.Width(300), GUILayout.Height(90)))
+        string reloadLabel = isRebindingReload ? "Press a key..." : $"Reload: {reloadKey}";
+        if (!isRebindingLocked && GUILayout.Button(reloadLabel, buttonStyle, GUILayout.Width(600), GUILayout.Height(100)))
         {
-            currentState = MenuState.GameOver;
+            isRebindingShoot = false;
+            isRebindingCover = false;
+            isRebindingPause = false;
+            isRebindingReload = true;
         }
         GUILayout.FlexibleSpace();
         GUILayout.EndHorizontal();
 
         GUILayout.Space(40);
+
+        GUILayout.BeginHorizontal();
+        GUILayout.FlexibleSpace();
+        if (GUILayout.Button("Reset to Default", buttonStyle, GUILayout.Width(600), GUILayout.Height(100)))
+        {
+            shootKey = KeyCode.Mouse0;
+            coverKey = KeyCode.Space;
+            pauseKey = KeyCode.Escape;
+            reloadKey = KeyCode.R;
+            if (crosshairController != null)
+            {
+                crosshairController.SetReloadKey(reloadKey);
+            }
+            PlayerPrefs.SetString("ShootKey", shootKey.ToString());
+            PlayerPrefs.SetString("CoverKey", coverKey.ToString());
+            PlayerPrefs.SetString("PauseKey", pauseKey.ToString());
+            PlayerPrefs.SetString("ReloadKey", reloadKey.ToString());
+            PlayerPrefs.Save();
+        }
+        GUILayout.FlexibleSpace();
+        GUILayout.EndHorizontal();
+
+        GUILayout.Space(20);
+
+        GUILayout.BeginHorizontal();
+        GUILayout.FlexibleSpace();
+        if (GUILayout.Button("Back", buttonStyle, GUILayout.Width(600), GUILayout.Height(100)))
+        {
+            currentState = MenuState.Options;
+        }
+        GUILayout.FlexibleSpace();
+        GUILayout.EndHorizontal();
+    }
+
+    void DrawLeaderboard()
+    {
+        GUILayout.Space(20);
 
         GUIStyle titleStyle = new GUIStyle(GUI.skin.label);
         titleStyle.fontSize = 64;
@@ -636,7 +806,10 @@ public class GameManager : MonoBehaviour
         entryStyle.fontSize = 36;
         entryStyle.alignment = TextAnchor.MiddleCenter;
 
-        GUILayout.Space(40);
+        GUIStyle buttonStyle = new GUIStyle(GUI.skin.button);
+        buttonStyle.fontSize = 36;
+
+        GUILayout.Space(50);
 
         for (int i = 0; i < 5; i++)
         {
@@ -646,6 +819,17 @@ public class GameManager : MonoBehaviour
             string accuracyEntry = highAccuracies[i] > 0 ? highAccuracies[i].ToString("F1") + "%" : "-";
             GUILayout.Label($"{rank} {nameEntry} | Score: {scoreEntry} | Accuracy: {accuracyEntry}", entryStyle, GUILayout.Height(70));
         }
+
+        GUILayout.Space(40);
+
+        GUILayout.BeginHorizontal();
+        GUILayout.FlexibleSpace();
+        if (GUILayout.Button("Back", buttonStyle, GUILayout.Width(600), GUILayout.Height(130)))
+        {
+            currentState = MenuState.GameOver;
+        }
+        GUILayout.FlexibleSpace();
+        GUILayout.EndHorizontal();
     }
 
     void UpdateLeaderboard()
@@ -682,6 +866,25 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    void UpdateCrosshairColor()
+    {
+        if (crosshairController != null)
+        {
+            Color newColor = selectedColorIndex switch
+            {
+                0 => Color.red,
+                1 => Color.green,
+                2 => Color.blue,
+                _ => Color.red
+            };
+            crosshairController.SetCrosshairColor(newColor);
+        }
+        else
+        {
+            Debug.LogWarning("CrosshairController reference is not assigned in GameManager!");
+        }
+    }
+
     public void ShowGameOverScreen()
     {
         Time.timeScale = 0f;
@@ -700,5 +903,10 @@ public class GameManager : MonoBehaviour
             crosshairController.SetCanShoot(false);
         }
         currentState = MenuState.Pause;
+    }
+
+    private bool IsRebinding()
+    {
+        return isRebindingShoot || isRebindingCover || isRebindingPause || isRebindingReload;
     }
 }

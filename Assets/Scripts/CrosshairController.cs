@@ -14,7 +14,7 @@ public class CrosshairController : MonoBehaviour
     private Color crosshairColor;
     private Color originalCrosshairColor;
     private KeyCode shootKey;
-    private KeyCode reloadKey = KeyCode.R;
+    private KeyCode reloadKey;
     private Rect crosshairRect;
     private int score = 0;
     private bool canShoot = true;
@@ -29,8 +29,6 @@ public class CrosshairController : MonoBehaviour
     private float reloadDuration = 1.5f;
     private float reloadTimer = 0f;
 
-    private int currentWeapon = 0;
-
     void Start()
     {
         int colorIndex = PlayerPrefs.GetInt("CrosshairColorIndex", 0);
@@ -44,6 +42,7 @@ public class CrosshairController : MonoBehaviour
         originalCrosshairColor = crosshairColor;
 
         shootKey = (KeyCode)System.Enum.Parse(typeof(KeyCode), PlayerPrefs.GetString("ShootKey", KeyCode.Mouse0.ToString()));
+        reloadKey = (KeyCode)System.Enum.Parse(typeof(KeyCode), PlayerPrefs.GetString("ReloadKey", KeyCode.R.ToString())); // Load from PlayerPrefs
 
         if (crosshairTexture == null)
         {
@@ -140,39 +139,29 @@ public class CrosshairController : MonoBehaviour
             gunshotSound.Play();
         }
 
-        switch (currentWeapon)
+        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        RaycastHit hit;
+        if (Physics.Raycast(ray, out hit))
         {
-            case 0:
-                Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-                RaycastHit hit;
-                if (Physics.Raycast(ray, out hit))
+            if (hit.collider.CompareTag("Target"))
+            {
+                totalHits++;
+                score += 10;
+                UpdateScoreDisplay();
+                if (targetSpawner != null)
                 {
-                    if (hit.collider.CompareTag("Target"))
-                    {
-                        totalHits++;
-                        score += 10;
-                        UpdateScoreDisplay();
-                        if (targetSpawner != null)
-                        {
-                            targetSpawner.OnTargetDestroyed();
-                        }
-                        if (hitEffectPrefab != null)
-                        {
-                            GameObject effect = Instantiate(hitEffectPrefab, hit.transform.position, Quaternion.identity);
-                            Destroy(effect, 1f);
-                        }
-                        crosshairColor = Color.yellow;
-                        flashTimer = flashDuration;
-                        Destroy(hit.collider.gameObject);
-                    }
+                    targetSpawner.OnTargetDestroyed();
                 }
-                break;
-            case 1:
-                Debug.Log("Automatic Rifle shooting logic to be implemented.");
-                break;
-            case 2:
-                Debug.Log("Shotgun shooting logic to be implemented.");
-                break;
+                if (hitEffectPrefab != null)
+                {
+                    GameObject effect = Instantiate(hitEffectPrefab, hit.transform.position, Quaternion.identity);
+                    Destroy(effect, 1f);
+                }
+                crosshairColor = Color.yellow;
+                flashTimer = flashDuration;
+                originalCrosshairColor = crosshairColor;
+                Destroy(hit.collider.gameObject);
+            }
         }
     }
 
@@ -251,26 +240,14 @@ public class CrosshairController : MonoBehaviour
         UpdateAmmoDisplay();
     }
 
-    public void SetWeapon(int weaponIndex)
+    public void SetCrosshairColor(Color color)
     {
-        currentWeapon = weaponIndex;
+        crosshairColor = color;
+        originalCrosshairColor = color;
+    }
 
-        switch (currentWeapon)
-        {
-            case 0: // Pistol
-                maxAmmo = 16;
-                reloadDuration = 1.5f;
-                break;
-            case 1: // Automatic Rifle
-                maxAmmo = 30;
-                reloadDuration = 2f;
-                break;
-            case 2: // Shotgun
-                maxAmmo = 6;
-                reloadDuration = 2.5f;
-                break;
-        }
-        currentAmmo = maxAmmo;
-        UpdateAmmoDisplay();
+    public void SetReloadKey(KeyCode newKey)
+    {
+        reloadKey = newKey;
     }
 }
