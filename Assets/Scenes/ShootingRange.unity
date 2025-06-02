@@ -836,7 +836,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: efb5039f494d549d9a25f15d62ba455b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  targetPrefab: {fileID: 4524057832479521825, guid: 6bc65586d74303c408a17b6e6dd3cd79, type: 3}
+  targetPrefab: {fileID: 4524057832479521825, guid: d833bad19a2e945ae99d43c8082bc5f1, type: 3}
   spawnIntervalMin: 1
   spawnIntervalMax: 1
   maxActiveTargets: 20
