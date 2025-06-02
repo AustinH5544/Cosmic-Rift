@@ -1595,8 +1595,8 @@ MonoBehaviour:
   bulletPrefab: {fileID: 6770343624299816540, guid: c900c976801d20247b89346013d8928f, type: 3}
   playerTransform: {fileID: 5196001700668407209, guid: fb4ecebb642dfb245948a758c0b8ac46, type: 3}
   shootingPoint: {fileID: 27097039945108434}
-  fireRate: 1.2
-  bulletSpeed: 7
+  fireRate: 1.5
+  bulletSpeed: 9
   rotationSpeed: 5
   hitChanceGainRate: 10
   hitChanceLossRate: 15
