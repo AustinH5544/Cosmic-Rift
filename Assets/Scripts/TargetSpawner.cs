@@ -41,9 +41,10 @@ public class TargetSpawner : MonoBehaviour
         float randomY = Random.Range(wallYMin, wallYMax);
         float fixedX = -wallZPosition;
 
+        
         Vector3 spawnPosition = new Vector3(fixedX, randomY, randomZ);
 
-        GameObject newTarget = Instantiate(targetPrefab, spawnPosition, Quaternion.Euler(0, 0, 0));
+        GameObject newTarget = Instantiate(targetPrefab, spawnPosition, Quaternion.Euler(0, 180, 0));
         newTarget.tag = "Target";
         activeTargetCount++;
     }
