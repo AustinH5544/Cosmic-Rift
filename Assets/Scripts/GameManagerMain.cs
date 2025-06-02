@@ -42,9 +42,9 @@ public class GameManagerMain : MonoBehaviour
 
         for (int i = 0; i < 5; i++)
         {
-            highScores[i] = PlayerPrefs.GetInt("HighScore" + i, 0);
-            highAccuracies[i] = PlayerPrefs.GetFloat("HighAccuracy" + i, 0f);
-            playerNames[i] = PlayerPrefs.GetString("PlayerName" + i, "-");
+            highScores[i] = PlayerPrefs.GetInt("MainHighScore" + i, 0);
+            highAccuracies[i] = PlayerPrefs.GetFloat("MainHighAccuracy" + i, 0f);
+            playerNames[i] = PlayerPrefs.GetString("MainPlayerName" + i, "-");
         }
 
         coverTransitionManager = FindObjectOfType<CoverTransitionManagerMain>();
@@ -170,23 +170,18 @@ public class GameManagerMain : MonoBehaviour
             case MenuState.GameOver:
                 DrawGameOverMenu();
                 break;
-
             case MenuState.Pause:
                 DrawPauseMenu();
                 break;
-
             case MenuState.Options:
                 DrawOptionsMenu();
                 break;
-
             case MenuState.SoundSettings:
                 DrawSoundSettings();
                 break;
-
             case MenuState.ControlsSettings:
                 DrawControlsSettings();
                 break;
-
             case MenuState.Leaderboard:
                 DrawLeaderboard();
                 break;
@@ -277,8 +272,12 @@ public class GameManagerMain : MonoBehaviour
             GUILayout.FlexibleSpace();
             if (GUILayout.Button("Submit", buttonStyle, GUILayout.Height(90), GUILayout.Width(300)))
             {
-                nameSubmitted = true;
                 UpdateLeaderboard();
+                nameSubmitted = true;
+                if (crosshairController != null)
+                {
+                    crosshairController.ResetStats();
+                }
             }
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
@@ -295,10 +294,6 @@ public class GameManagerMain : MonoBehaviour
 
             if (GUILayout.Button("Restart", buttonStyle, GUILayout.Height(90)))
             {
-                if (crosshairController != null)
-                {
-                    crosshairController.ResetStats();
-                }
                 nameSubmitted = false;
                 Time.timeScale = 1f;
                 SceneManager.LoadScene("MainLevel");
@@ -557,9 +552,9 @@ public class GameManagerMain : MonoBehaviour
 
             for (int i = 0; i < 5; i++)
             {
-                PlayerPrefs.SetInt("HighScore" + i, highScores[i]);
-                PlayerPrefs.SetFloat("HighAccuracy" + i, highAccuracies[i]);
-                PlayerPrefs.SetString("PlayerName" + i, playerNames[i]);
+                PlayerPrefs.SetInt("MainHighScore" + i, highScores[i]);
+                PlayerPrefs.SetFloat("MainHighAccuracy" + i, highAccuracies[i]);
+                PlayerPrefs.SetString("MainPlayerName" + i, playerNames[i]);
             }
             PlayerPrefs.Save();
         }
@@ -567,10 +562,6 @@ public class GameManagerMain : MonoBehaviour
 
     public void ShowGameOverScreen()
     {
-        if (crosshairController != null)
-        {
-            crosshairController.ResetStats();
-        }
         Time.timeScale = 0f;
         currentState = MenuState.GameOver;
     }
@@ -587,7 +578,6 @@ public class GameManagerMain : MonoBehaviour
         ShowGameOverScreen();
     }
 
-    // Added methods to check menu state
     public bool IsPaused()
     {
         return currentState == MenuState.Pause;
