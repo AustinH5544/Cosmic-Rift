@@ -227,7 +227,7 @@ PrefabInstance:
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 3812373822386833840, guid: 9ce511f0a83189246b65c5235ca9be0e, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 5367848005260417469}
+      addedObject: {fileID: 3490655689003275728}
   m_SourcePrefab: {fileID: 100100000, guid: 9ce511f0a83189246b65c5235ca9be0e, type: 3}
 --- !u!4 &9043943451558772070 stripped
 Transform:
@@ -239,7 +239,7 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 3812373822386833840, guid: 9ce511f0a83189246b65c5235ca9be0e, type: 3}
   m_PrefabInstance: {fileID: 5363282091194501028}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &5367848005260417469
+--- !u!114 &3490655689003275728
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -248,8 +248,12 @@ MonoBehaviour:
   m_GameObject: {fileID: 9117099219520409108}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e0dc1db5eda5c734c8765a98ecf2060e, type: 3}
+  m_Script: {fileID: 11500000, guid: 9cb18b13061f32542a39636ecc8a43a5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   childPrefab: {fileID: 5668885658457261225, guid: 543a95ced902ef64fbb37dd059e3c735, type: 3}
-  respawnDelay: 1
+  maxChildren: 8
+  spawnLimit: 8
+  spawnInterval: 4
+  spawnLocalPosition: {x: 0, y: 0, z: 0}
+  spawnLocalRotation: {x: 0, y: 0, z: 0, w: 1}
