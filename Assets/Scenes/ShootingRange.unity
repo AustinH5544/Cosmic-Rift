@@ -841,7 +841,7 @@ MonoBehaviour:
   spawnIntervalMax: 1
   maxActiveTargets: 20
   wallZPosition: -7
-  wallXMin: -15
+  wallXMin: -10
   wallXMax: 10
   wallYMin: 0
   wallYMax: 2
