@@ -147,7 +147,7 @@ public class GameManagerMain : MonoBehaviour
         {
             if (coverTransitionManager.CurrentIndex >= coverTransitionManager.SplineStops.Count)
             {
-                ShowGameOverScreen();
+                CompleteGame(); // Call CompleteGame instead of ShowGameOverScreen directly
             }
         }
     }
@@ -558,6 +558,23 @@ public class GameManagerMain : MonoBehaviour
             }
             PlayerPrefs.Save();
         }
+    }
+
+    // Called when the player successfully completes the game
+    public void CompleteGame()
+    {
+        // Increment Story Mode completions and unlock the next log
+        int storyCompletions = PlayerPrefs.GetInt("StoryModeCompletions", 0);
+        storyCompletions++;
+        PlayerPrefs.SetInt("StoryModeCompletions", storyCompletions);
+
+        int unlockedLogs = Mathf.Min(storyCompletions, 7); // Max 7 to unlock all 8 tapes (0-7)
+        PlayerPrefs.SetInt("UnlockedStoryLogs", unlockedLogs);
+        PlayerPrefs.Save();
+
+        Debug.Log($"Game Completed! Story Completions: {storyCompletions}, Unlocked Logs: {unlockedLogs}");
+
+        ShowGameOverScreen();
     }
 
     public void ShowGameOverScreen()
