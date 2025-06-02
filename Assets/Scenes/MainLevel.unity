@@ -2751,14 +2751,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   enemyPrefabs:
-  - {fileID: 2174541502192126635, guid: 42e7cbe83f63b46438acf483a6aec563, type: 3}
-  - {fileID: 3269317173389547192, guid: f862f31daffb46d49a8701c894a6af3c, type: 3}
-  - {fileID: 4845976700414670835, guid: 41397074cdf2a2641819e2571b98a297, type: 3}
-  - {fileID: 1956263902501100816, guid: 23601cc371f71874a989eaf2487747a3, type: 3}
-  - {fileID: 4784409075826886949, guid: df3665b5dd5324e409132f5a49552a6f, type: 3}
-  - {fileID: 99221606200356076, guid: ade024a265b5b134cb1e6b9b64a3ea2d, type: 3}
-  - {fileID: 4698535830958657009, guid: 38b5773ade46a614b8e5d82d06e7a35e, type: 3}
-  - {fileID: 7918425328092060083, guid: 033e7d4093873cd4c86a041f6269dcbf, type: 3}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
   - {fileID: 246879137262436820, guid: e7d1741ddab899945baf7b7f60ccfa61, type: 3}
   spawnPoints:
   - {fileID: 1757410535}
@@ -5715,7 +5715,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 9193091905229197031, guid: 5a826e1a9f9a0a74fbf63d825c3e464a, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 111.5
+      value: 112.039
       objectReference: {fileID: 0}
     - target: {fileID: 9193091905229197031, guid: 5a826e1a9f9a0a74fbf63d825c3e464a, type: 3}
       propertyPath: m_LocalPosition.y
@@ -5928,7 +5928,7 @@ Transform:
   m_GameObject: {fileID: 1100870836}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -5.8480644, y: 23.22, z: 8.38}
+  m_LocalPosition: {x: -3, y: 25.78, z: 8.38}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
