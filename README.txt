@@ -19,4 +19,7 @@ Goal
    -ShootingRange-
 	Shoot as many targets as can in the allotted time. 
 
+Avoid Being attacked
+Let go of spacebar is you see a red bullet or a glowing flying bug coming at you !
+
 Try your hand at both of these or become an expert and top the leaderboard.
